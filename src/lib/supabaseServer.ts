@@ -11,11 +11,18 @@ export async function supabaseServer() {
       getAll() {
         return cookieStore.getAll();
       },
-      setAll(cookiesToSet) {
-        cookiesToSet.forEach(({ name, value, options }) => {
-          cookieStore.set(name, value, options);
-        });
-      }
+      setAll(
+  cookiesToSet: Array<{
+    name: string;
+    value: string;
+    options?: Parameters<typeof cookieStore.set>[2];
+  }>
+) {
+  cookiesToSet.forEach(({ name, value, options }) => {
+    cookieStore.set(name, value, options);
+  });
+}
+
     }
   });
 }
