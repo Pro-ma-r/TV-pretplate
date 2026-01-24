@@ -26,12 +26,6 @@ export function SubscriptionsTable({
     note?: string;
   }) => Promise<void>;
 }) {
-
-  rows: Array<SubscriptionWithStatus & { brand_name?: string; package_name?: string }>;
-  canCreate: boolean;
-  onDisable: (id: string) => Promise<void>;
-  onCreate: (payload: { brand_id: string; package_id: string; start_date: string; end_date: string; payment_date?: string; note?: string }) => Promise<void>;
-}) {
   const [q, setQ] = useState("");
   const [status, setStatus] = useState<"" | SubscriptionWithStatus["status"]>("");
   const [creating, setCreating] = useState(false);
@@ -56,12 +50,13 @@ export function SubscriptionsTable({
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+      {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex gap-2">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Search (brand, paket, napomena)"
+            placeholder="Traži (brend, paket, napomena)"
             className="w-72 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
           />
           <select
@@ -89,8 +84,11 @@ export function SubscriptionsTable({
         </div>
       </div>
 
+      {/* CREATE FORM */}
       {creating && canCreate && (
         <CreateForm
+          brands={brands}
+          packages={packages}
           onCreate={async (p) => {
             await onCreate(p);
             setCreating(false);
@@ -98,6 +96,7 @@ export function SubscriptionsTable({
         />
       )}
 
+      {/* TABLE */}
       <div className="mt-4 overflow-auto">
         <table className="w-full text-left text-sm">
           <thead className="text-zinc-300">
@@ -142,6 +141,8 @@ export function SubscriptionsTable({
     </div>
   );
 }
+
+/* ================= CREATE FORM ================= */
 
 function CreateForm({
   brands,
@@ -240,6 +241,6 @@ function CreateForm({
       >
         Kreiraj pretplatu
       </button>
-      </div>
+    </div>
   );
 }
