@@ -20,7 +20,7 @@ export function AppShell({
               style={{ backgroundColor: "#E4CEFB" }}
             >
               <img
-                src="/logo.png"
+                src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
                 alt="Tvornica vjenčanja"
                 className="h-full w-full object-contain"
               />
