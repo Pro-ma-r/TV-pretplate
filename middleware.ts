@@ -2,11 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
-    request: {
-      headers: request.headers
-    }
-  });
+  const response = NextResponse.next();
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,33 +12,20 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(
-          cookiesToSet: Array<{
-            name: string;
-            value: string;
-            options?: {
-              path?: string;
-              domain?: string;
-              expires?: Date;
-              httpOnly?: boolean;
-              secure?: boolean;
-              sameSite?: "lax" | "strict" | "none";
-            };
-          }>
-        ) {
-          cookiesToSet.forEach((cookie) => {
-            response.cookies.set(
-              cookie.name,
-              cookie.value,
-              cookie.options
-            );
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            response.cookies.set({
+              name,
+              value,
+              ...options
+            });
           });
         }
       }
     }
   );
 
-  // ključno: osvježi session cookie
+  // 🔑 KLJUČNO: ovo obnavlja session i postavlja cookie
   await supabase.auth.getUser();
 
   return response;
@@ -50,6 +33,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|login|logout).*)"
   ]
 };
