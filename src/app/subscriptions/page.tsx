@@ -11,15 +11,11 @@ type SubscriptionRow = SubscriptionWithStatus & {
   client_email?: string;
 };
 
-export default async function SubscriptionsPage({
-  searchParams
-}: {
-  searchParams?: { q?: string };
-}) {
+export default async function SubscriptionsPage(props: any) {
   const u = await requireUser();
   if (!u) redirect("/login");
 
-  const q = searchParams?.q ?? "";
+  const q = props?.searchParams?.q ?? "";
 
   const supabase = await supabaseServer();
 
