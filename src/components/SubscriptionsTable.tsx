@@ -10,10 +10,9 @@ type Row = SubscriptionWithStatus & {
   client_email?: string;
 };
 
-const STATUS_LABELS: Record<
-  "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA",
-  string
-> = {
+type DerivedStatus = "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA";
+
+const STATUS_LABELS: Record<DerivedStatus, string> = {
   AKTIVNA: "Aktivan",
   NEAKTIVNA: "Neaktivan",
   ISKLJUCENA: "Isključen"
@@ -23,6 +22,12 @@ function formatDate(d?: string | null) {
   if (!d) return "—";
   const date = new Date(d);
   return date.toLocaleDateString("hr-HR");
+}
+
+function deriveStatus(r: Row): DerivedStatus {
+  if (r.manually_disabled) return "ISKLJUCENA";
+  if (r.end_date && new Date(r.end_date) < new Date()) return "NEAKTIVNA";
+  return "AKTIVNA";
 }
 
 export function SubscriptionsTable({
@@ -51,9 +56,7 @@ export function SubscriptionsTable({
   const searchParams = useSearchParams();
 
   const [q, setQ] = useState(searchParams.get("q") ?? "");
-  const [status, setStatus] = useState<
-    "" | "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA"
-  >("");
+  const [status, setStatus] = useState<"" | DerivedStatus>("");
   const [creating, setCreating] = useState(false);
 
   // sync search → URL
@@ -65,16 +68,24 @@ export function SubscriptionsTable({
     router.replace(`/subscriptions?${params.toString()}`);
   }, [q]);
 
-  // frontend filter po statusu (brz)
+  const rowsWithStatus = useMemo(() => {
+    return rows.map((r) => ({
+      ...r,
+      _derivedStatus: deriveStatus(r)
+    }));
+  }, [rows]);
+
   const filteredRows = useMemo(() => {
-    if (!status) return rows;
-    return rows.filter((r) => r.status === status);
-  }, [rows, status]);
+    if (!status) return rowsWithStatus;
+    return rowsWithStatus.filter(
+      (r) => r._derivedStatus === status
+    );
+  }, [rowsWithStatus, status]);
 
   const exportRows = filteredRows.map((r) => ({
     brend: r.brand_name,
     email: r.client_email ?? "",
-    status: STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? r.status,
+    status: STATUS_LABELS[r._derivedStatus],
     od: formatDate(r.start_date),
     do: formatDate(r.end_date)
   }));
@@ -139,10 +150,10 @@ export function SubscriptionsTable({
                   {formatDate(r.start_date)} – {formatDate(r.end_date)}
                 </td>
                 <td className="py-2 pr-4">
-                  {STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? "—"}
+                  {STATUS_LABELS[r._derivedStatus]}
                 </td>
                 <td className="py-2 pr-4">
-                  {r.status !== "ISKLJUCENA" ? (
+                  {r._derivedStatus !== "ISKLJUCENA" ? (
                     <button
                       onClick={() => onDisable(r.id)}
                       className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
