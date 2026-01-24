@@ -18,7 +18,7 @@ export function AppShell({
             <img
               src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
               alt="Tvornica vjenčanja"
-              className="h-13 w-13 object-contain"
+              className="h-12 w-12 object-contain"
             />
 
             <div>
