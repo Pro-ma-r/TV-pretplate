@@ -12,12 +12,14 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  const u = await requireUser();
+  // ⬅️ JEDNA instanca
+  const supabase = await supabaseServer();
+
+  // ⬅️ requireUser koristi ISTU instancu
+  const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
   const q = props?.searchParams?.q ?? "";
-
-  const supabase = await supabaseServer();
 
   const subsRes = await supabase.rpc("search_subscriptions", {
     search_text: q
@@ -29,13 +31,11 @@ export default async function SubscriptionsPage(props: any) {
 
   const brandsRes = await supabase
     .from("brands")
-    .select("id,name")
-    .returns<Array<{ id: string; name: string }>>();
+    .select("id,name");
 
   const pkgsRes = await supabase
     .from("packages")
-    .select("id,name")
-    .returns<Array<{ id: string; name: string }>>();
+    .select("id,name");
 
   const brandMap = new Map(
     (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
@@ -91,10 +91,6 @@ export default async function SubscriptionsPage(props: any) {
         onDisable={disable}
         onCreate={create}
       />
-
-      <div className="mt-3 text-xs text-zinc-500">
-        Pretraživanje radi po emailu (slovo po slovo), brendu, paketu i napomeni.
-      </div>
     </AppShell>
   );
 }
