@@ -30,7 +30,13 @@ export function TrendCharts({ data }: { data: Array<{ month: string; newSubscrip
               <XAxis dataKey="month" />
               <YAxis />
               <Tooltip />
-              <Line type="monotone" dataKey="endedSubscriptions" />
+              <Line
+  type="monotone"
+  dataKey="endedSubscriptions"
+  stroke="#AF9BD8"
+  strokeWidth={3}
+/>
+
             </LineChart>
           </ResponsiveContainer>
         </div>
