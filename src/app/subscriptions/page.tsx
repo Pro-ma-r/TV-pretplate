@@ -15,10 +15,9 @@ export default async function SubscriptionsPage() {
 
   const supabase = await supabaseServer();
 
-  // ⬇️ BITNA PROMJENA: novi view
+  // ✅ RPC UMJESTO VIEW-a
   const subsRes = await supabase
-    .from("subscriptions_with_client_email")
-    .select("*")
+    .rpc("get_subscriptions_with_client_email")
     .returns<SubscriptionWithClientEmail[]>();
 
   const brandsRes = await supabase
@@ -88,8 +87,7 @@ export default async function SubscriptionsPage() {
       />
 
       <div className="mt-3 text-xs text-zinc-500">
-        Napomena: “Nova pretplata” je trenutno minimalna forma. Brend i paket su već
-        prebačeni u dropdown, a search sada radi i po email adresi klijenta.
+        Search sada radi i po email adresi klijenta (RPC, admin-only).
       </div>
     </AppShell>
   );
