@@ -47,7 +47,15 @@ export default async function SubscriptionsPage() {
 
   return (
     <AppShell title="Pretplate" role={u.role}>
-      <SubscriptionsTable rows={rows} canCreate={canCreate} onDisable={disable} onCreate={create} />
+      <SubscriptionsTable
+  rows={rows}
+  brands={brandsRes.data ?? []}
+  packages={pkgsRes.data ?? []}
+  canCreate={canCreate}
+  onDisable={disable}
+  onCreate={create}
+/>
+
       <div className="mt-3 text-xs text-zinc-500">
         Napomena: “Nova pretplata” je trenutno minimalna forma (UUID). Kad želiš, prebacim u dropdown (brand + paket) i auto-izračun end_date po paketu.
       </div>
