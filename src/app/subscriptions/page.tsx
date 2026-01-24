@@ -15,10 +15,13 @@ export default async function SubscriptionsPage() {
 
   const supabase = await supabaseServer();
 
-  // ✅ RPC UMJESTO VIEW-a
-  const subsRes = await supabase
-    .rpc("get_subscriptions_with_client_email")
-    .returns<SubscriptionWithClientEmail[]>();
+  // RPC poziv
+  const subsRes = await supabase.rpc("get_subscriptions_with_client_email");
+
+  // 🛡️ TS + runtime guard
+  const subscriptions: SubscriptionWithClientEmail[] = Array.isArray(subsRes.data)
+    ? (subsRes.data as SubscriptionWithClientEmail[])
+    : [];
 
   const brandsRes = await supabase
     .from("brands")
@@ -37,7 +40,7 @@ export default async function SubscriptionsPage() {
     (pkgsRes.data ?? []).map((p) => [p.id, p.name] as const)
   );
 
-  const rows = (subsRes.data ?? []).map((s) => ({
+  const rows = subscriptions.map((s) => ({
     ...s,
     brand_name: brandMap.get(s.brand_id),
     package_name: pkgMap.get(s.package_id),
@@ -87,7 +90,7 @@ export default async function SubscriptionsPage() {
       />
 
       <div className="mt-3 text-xs text-zinc-500">
-        Search sada radi i po email adresi klijenta (RPC, admin-only).
+        Search radi po nazivu, paketu i email adresi klijenta (RPC).
       </div>
     </AppShell>
   );
