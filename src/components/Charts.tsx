@@ -15,7 +15,7 @@ export function TrendCharts({ data }: { data: Array<{ month: string; newSubscrip
               <YAxis />
               <Tooltip />
               <Legend />
-              <Bar dataKey="newSubscriptions" />
+              <Bar dataKey="newSubscriptions" fill="#9475CC" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
