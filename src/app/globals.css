@@ -4,4 +4,20 @@
 
 :root {
   color-scheme: dark;
+
+  --bg: #0b0b0f;
+  --card: #111118;
+  --border: #1f1f2a;
+
+  --text: #ffffff;
+  --text-muted: #cfc7e8;
+
+  --primary: #9475cc;
+  --primary-soft: #af9bd8;
+  --primary-light: #e4cefb;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text);
 }
