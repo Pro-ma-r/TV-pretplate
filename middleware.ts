@@ -16,7 +16,13 @@ export async function middleware(request: NextRequest) {
       getAll() {
         return request.cookies.getAll();
       },
-      setAll(cookiesToSet) {
+      setAll(
+        cookiesToSet: Array<{
+          name: string;
+          value: string;
+          options?: Parameters<typeof response.cookies.set>[0];
+        }>
+      ) {
         cookiesToSet.forEach(({ name, value, options }) => {
           response.cookies.set({
             name,
@@ -28,7 +34,8 @@ export async function middleware(request: NextRequest) {
     }
   });
 
-  // Ovo "pinganje" je poanta: osvježi/validira session cookie
+  // OVO JE KLJUČNO:
+  // prisilno validira i osvježava session cookie
   await supabase.auth.getUser();
 
   return response;
@@ -36,7 +43,6 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    // sve osim static asseta
     "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml).*)"
   ]
 };
