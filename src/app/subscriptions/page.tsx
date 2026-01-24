@@ -5,23 +5,44 @@ import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
 
+type SubscriptionWithClientEmail = SubscriptionWithStatus & {
+  client_email?: string;
+};
+
 export default async function SubscriptionsPage() {
   const u = await requireUser();
   if (!u) redirect("/login");
 
   const supabase = await supabaseServer();
 
-  const subsRes = await supabase.from("subscriptions_with_status").select("*").returns<SubscriptionWithStatus[]>();
-  const brandsRes = await supabase.from("brands").select("id,name").returns<Array<{ id: string; name: string }>>();
-  const pkgsRes = await supabase.from("packages").select("id,name").returns<Array<{ id: string; name: string }>>();
+  // ⬇️ BITNA PROMJENA: novi view
+  const subsRes = await supabase
+    .from("subscriptions_with_client_email")
+    .select("*")
+    .returns<SubscriptionWithClientEmail[]>();
 
-  const brandMap = new Map((brandsRes.data ?? []).map((b) => [b.id, b.name] as const));
-  const pkgMap = new Map((pkgsRes.data ?? []).map((p) => [p.id, p.name] as const));
+  const brandsRes = await supabase
+    .from("brands")
+    .select("id,name")
+    .returns<Array<{ id: string; name: string }>>();
+
+  const pkgsRes = await supabase
+    .from("packages")
+    .select("id,name")
+    .returns<Array<{ id: string; name: string }>>();
+
+  const brandMap = new Map(
+    (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
+  );
+  const pkgMap = new Map(
+    (pkgsRes.data ?? []).map((p) => [p.id, p.name] as const)
+  );
 
   const rows = (subsRes.data ?? []).map((s) => ({
     ...s,
     brand_name: brandMap.get(s.brand_id),
-    package_name: pkgMap.get(s.package_id)
+    package_name: pkgMap.get(s.package_id),
+    client_email: s.client_email
   }));
 
   const canCreate = u.role === "admin";
@@ -29,10 +50,20 @@ export default async function SubscriptionsPage() {
   async function disable(id: string) {
     "use server";
     const sb = await supabaseServer();
-    await sb.rpc("disable_subscription", { p_subscription_id: id, p_reason: "Isključeno iz admin panela" });
+    await sb.rpc("disable_subscription", {
+      p_subscription_id: id,
+      p_reason: "Isključeno iz admin panela"
+    });
   }
 
-  async function create(payload: { brand_id: string; package_id: string; start_date: string; end_date: string; payment_date?: string; note?: string }) {
+  async function create(payload: {
+    brand_id: string;
+    package_id: string;
+    start_date: string;
+    end_date: string;
+    payment_date?: string;
+    note?: string;
+  }) {
     "use server";
     const sb = await supabaseServer();
     await sb.rpc("create_subscription", {
@@ -48,16 +79,17 @@ export default async function SubscriptionsPage() {
   return (
     <AppShell title="Pretplate" role={u.role}>
       <SubscriptionsTable
-  rows={rows}
-  brands={brandsRes.data ?? []}
-  packages={pkgsRes.data ?? []}
-  canCreate={canCreate}
-  onDisable={disable}
-  onCreate={create}
-/>
+        rows={rows}
+        brands={brandsRes.data ?? []}
+        packages={pkgsRes.data ?? []}
+        canCreate={canCreate}
+        onDisable={disable}
+        onCreate={create}
+      />
 
       <div className="mt-3 text-xs text-zinc-500">
-        Napomena: “Nova pretplata” je trenutno minimalna forma (UUID). Kad želiš, prebacim u dropdown (brand + paket) i auto-izračun end_date po paketu.
+        Napomena: “Nova pretplata” je trenutno minimalna forma. Brend i paket su već
+        prebačeni u dropdown, a search sada radi i po email adresi klijenta.
       </div>
     </AppShell>
   );
