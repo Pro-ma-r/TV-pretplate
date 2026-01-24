@@ -5,22 +5,30 @@ import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
 
-type SubscriptionWithClientEmail = SubscriptionWithStatus & {
+type SubscriptionRow = SubscriptionWithStatus & {
+  brand_name?: string;
+  package_name?: string;
   client_email?: string;
 };
 
-export default async function SubscriptionsPage() {
+export default async function SubscriptionsPage({
+  searchParams
+}: {
+  searchParams?: { q?: string };
+}) {
   const u = await requireUser();
   if (!u) redirect("/login");
 
+  const q = searchParams?.q ?? "";
+
   const supabase = await supabaseServer();
 
-  // RPC poziv
-  const subsRes = await supabase.rpc("get_subscriptions_with_client_email");
+  const subsRes = await supabase.rpc("search_subscriptions", {
+    search_text: q
+  });
 
-  // 🛡️ TS + runtime guard
-  const subscriptions: SubscriptionWithClientEmail[] = Array.isArray(subsRes.data)
-    ? (subsRes.data as SubscriptionWithClientEmail[])
+  const rows: SubscriptionRow[] = Array.isArray(subsRes.data)
+    ? subsRes.data
     : [];
 
   const brandsRes = await supabase
@@ -40,11 +48,10 @@ export default async function SubscriptionsPage() {
     (pkgsRes.data ?? []).map((p) => [p.id, p.name] as const)
   );
 
-  const rows = subscriptions.map((s) => ({
-    ...s,
-    brand_name: brandMap.get(s.brand_id),
-    package_name: pkgMap.get(s.package_id),
-    client_email: s.client_email
+  const finalRows = rows.map((r) => ({
+    ...r,
+    brand_name: r.brand_name ?? brandMap.get(r.brand_id),
+    package_name: r.package_name ?? pkgMap.get(r.package_id)
   }));
 
   const canCreate = u.role === "admin";
@@ -81,7 +88,7 @@ export default async function SubscriptionsPage() {
   return (
     <AppShell title="Pretplate" role={u.role}>
       <SubscriptionsTable
-        rows={rows}
+        rows={finalRows}
         brands={brandsRes.data ?? []}
         packages={pkgsRes.data ?? []}
         canCreate={canCreate}
@@ -90,7 +97,7 @@ export default async function SubscriptionsPage() {
       />
 
       <div className="mt-3 text-xs text-zinc-500">
-        Search radi po nazivu, paketu i email adresi klijenta (RPC).
+        Pretraživanje radi po emailu (slovo po slovo), brendu, paketu i napomeni.
       </div>
     </AppShell>
   );
