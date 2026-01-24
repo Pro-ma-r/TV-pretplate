@@ -6,10 +6,27 @@ import { ExportButtons } from "./ExportButtons";
 
 export function SubscriptionsTable({
   rows,
+  brands,
+  packages,
   canCreate,
   onDisable,
   onCreate
 }: {
+  rows: Array<SubscriptionWithStatus & { brand_name?: string; package_name?: string }>;
+  brands: Array<{ id: string; name: string }>;
+  packages: Array<{ id: string; name: string }>;
+  canCreate: boolean;
+  onDisable: (id: string) => Promise<void>;
+  onCreate: (payload: {
+    brand_id: string;
+    package_id: string;
+    start_date: string;
+    end_date: string;
+    payment_date?: string;
+    note?: string;
+  }) => Promise<void>;
+}) {
+
   rows: Array<SubscriptionWithStatus & { brand_name?: string; package_name?: string }>;
   canCreate: boolean;
   onDisable: (id: string) => Promise<void>;
@@ -127,9 +144,20 @@ export function SubscriptionsTable({
 }
 
 function CreateForm({
+  brands,
+  packages,
   onCreate
 }: {
-  onCreate: (payload: { brand_id: string; package_id: string; start_date: string; end_date: string; payment_date?: string; note?: string }) => Promise<void>;
+  brands: Array<{ id: string; name: string }>;
+  packages: Array<{ id: string; name: string }>;
+  onCreate: (payload: {
+    brand_id: string;
+    package_id: string;
+    start_date: string;
+    end_date: string;
+    payment_date?: string;
+    note?: string;
+  }) => Promise<void>;
 }) {
   const [brand_id, setBrandId] = useState("");
   const [package_id, setPackageId] = useState("");
@@ -141,24 +169,77 @@ function CreateForm({
   return (
     <div className="mt-4 rounded-2xl border border-zinc-800 bg-zinc-950 p-4">
       <div className="grid gap-3 md:grid-cols-2">
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="brand_id" value={brand_id} onChange={(e) => setBrandId(e.target.value)} />
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="package_id" value={package_id} onChange={(e) => setPackageId(e.target.value)} />
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="start_date (YYYY-MM-DD)" value={start_date} onChange={(e) => setStart(e.target.value)} />
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="end_date (YYYY-MM-DD)" value={end_date} onChange={(e) => setEnd(e.target.value)} />
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="payment_date (opcionalno)" value={payment_date} onChange={(e) => setPay(e.target.value)} />
-        <input className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm" placeholder="note (opcionalno)" value={note} onChange={(e) => setNote(e.target.value)} />
+        <select
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          value={brand_id}
+          onChange={(e) => setBrandId(e.target.value)}
+        >
+          <option value="">Odaberi brend</option>
+          {brands.map((b) => (
+            <option key={b.id} value={b.id}>
+              {b.name}
+            </option>
+          ))}
+        </select>
+
+        <select
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          value={package_id}
+          onChange={(e) => setPackageId(e.target.value)}
+        >
+          <option value="">Odaberi paket</option>
+          {packages.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
+          ))}
+        </select>
+
+        <input
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          placeholder="OD (YYYY-MM-DD)"
+          value={start_date}
+          onChange={(e) => setStart(e.target.value)}
+        />
+
+        <input
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          placeholder="DO (YYYY-MM-DD)"
+          value={end_date}
+          onChange={(e) => setEnd(e.target.value)}
+        />
+
+        <input
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          placeholder="Datum plaćanja (opcionalno)"
+          value={payment_date}
+          onChange={(e) => setPay(e.target.value)}
+        />
+
+        <input
+          className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+          placeholder="Napomena (opcionalno)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        />
       </div>
 
       <button
-        onClick={() => onCreate({ brand_id, package_id, start_date, end_date, payment_date: payment_date || undefined, note: note || undefined })}
-        className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm hover:bg-zinc-800"
+        disabled={!brand_id || !package_id || !start_date || !end_date}
+        onClick={() =>
+          onCreate({
+            brand_id,
+            package_id,
+            start_date,
+            end_date,
+            payment_date: payment_date || undefined,
+            note: note || undefined
+          })
+        }
+        className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900 px-3 py-2 text-sm hover:bg-zinc-800 disabled:opacity-40"
       >
         Kreiraj pretplatu
       </button>
-
-      <div className="mt-2 text-xs text-zinc-500">
-        Ovo je minimalni admin form. Kasnije ga pretvaramo u dropdown (brand name + package name), bez UUID-a.
       </div>
-    </div>
   );
 }
