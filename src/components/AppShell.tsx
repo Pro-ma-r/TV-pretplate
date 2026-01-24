@@ -15,16 +15,11 @@ export function AppShell({
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           {/* LEFT: LOGO + TITLE */}
           <div className="flex items-center gap-3">
-            <div
-              className="h-10 w-10 rounded-xl p-1 flex items-center justify-center"
-              style={{ backgroundColor: "#E4CEFB" }}
-            >
-              <img
-                src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
-                alt="Tvornica vjenčanja"
-                className="h-full w-full object-contain"
-              />
-            </div>
+            <img
+              src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
+              alt="Tvornica vjenčanja"
+              className="h-10 w-10 object-contain"
+            />
 
             <div>
               <div className="text-sm text-zinc-400">
