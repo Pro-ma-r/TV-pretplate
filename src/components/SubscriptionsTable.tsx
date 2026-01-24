@@ -10,6 +10,15 @@ type Row = SubscriptionWithStatus & {
   client_email?: string;
 };
 
+const STATUS_LABELS: Record<
+  "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA",
+  string
+> = {
+  AKTIVNA: "Aktivan",
+  NEAKTIVNA: "Neaktivan",
+  ISKLJUCENA: "Isključen"
+};
+
 function formatDate(d?: string | null) {
   if (!d) return "—";
   const date = new Date(d);
@@ -42,7 +51,9 @@ export function SubscriptionsTable({
   const searchParams = useSearchParams();
 
   const [q, setQ] = useState(searchParams.get("q") ?? "");
-  const [status, setStatus] = useState<"" | "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA">("");
+  const [status, setStatus] = useState<
+    "" | "AKTIVNA" | "NEAKTIVNA" | "ISKLJUCENA"
+  >("");
   const [creating, setCreating] = useState(false);
 
   // sync search → URL
@@ -63,7 +74,7 @@ export function SubscriptionsTable({
   const exportRows = filteredRows.map((r) => ({
     brend: r.brand_name,
     email: r.client_email ?? "",
-    status: r.status,
+    status: STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? r.status,
     od: formatDate(r.start_date),
     do: formatDate(r.end_date)
   }));
@@ -124,10 +135,12 @@ export function SubscriptionsTable({
                 <td className="py-2 pr-4 text-zinc-400">
                   {r.client_email ?? "—"}
                 </td>
-                <td className="py-2 pr-4">
+                <td className="py-2 pr-4 whitespace-nowrap">
                   {formatDate(r.start_date)} – {formatDate(r.end_date)}
                 </td>
-                <td className="py-2 pr-4">{r.status}</td>
+                <td className="py-2 pr-4">
+                  {STATUS_LABELS[r.status as keyof typeof STATUS_LABELS] ?? "—"}
+                </td>
                 <td className="py-2 pr-4">
                   {r.status !== "ISKLJUCENA" ? (
                     <button
