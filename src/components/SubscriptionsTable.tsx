@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { ExportButtons } from "./ExportButtons";
 
@@ -12,7 +13,13 @@ export function SubscriptionsTable({
   onDisable,
   onCreate
 }: {
-  rows: Array<SubscriptionWithStatus & { brand_name?: string; package_name?: string }>;
+  rows: Array<
+    SubscriptionWithStatus & {
+      brand_name?: string;
+      package_name?: string;
+      client_email?: string;
+    }
+  >;
   brands: Array<{ id: string; name: string }>;
   packages: Array<{ id: string; name: string }>;
   canCreate: boolean;
@@ -26,22 +33,25 @@ export function SubscriptionsTable({
     note?: string;
   }) => Promise<void>;
 }) {
-  const [q, setQ] = useState("");
-  const [status, setStatus] = useState<"" | SubscriptionWithStatus["status"]>("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [q, setQ] = useState(searchParams.get("q") ?? "");
   const [creating, setCreating] = useState(false);
 
-  const filtered = useMemo(() => {
-    return rows.filter((r) => {
-      const hay = `${r.brand_name ?? ""} ${r.package_name ?? ""} ${r.note ?? ""}`.toLowerCase();
-      if (q && !hay.includes(q.toLowerCase())) return false;
-      if (status && r.status !== status) return false;
-      return true;
-    });
-  }, [rows, q, status]);
+  // 🔑 KLJUČNO: sync input → URL → backend
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (q) params.set("q", q);
+    else params.delete("q");
 
-  const exportRows = filtered.map((r) => ({
+    router.replace(`/subscriptions?${params.toString()}`);
+  }, [q]);
+
+  const exportRows = rows.map((r) => ({
     brand: r.brand_name ?? r.brand_id,
     paket: r.package_name ?? r.package_id,
+    email: r.client_email ?? "",
     od: r.start_date,
     do: r.end_date,
     status: r.status,
@@ -50,25 +60,14 @@ export function SubscriptionsTable({
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-      {/* HEADER */}
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex gap-2">
           <input
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            placeholder="Traži (brend, paket, napomena)"
-            className="w-72 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
+            placeholder="Pretraži: email, brend, paket, napomena"
+            className="w-80 rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
           />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as any)}
-            className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm outline-none"
-          >
-            <option value="">Svi statusi</option>
-            <option value="AKTIVNA">AKTIVNA</option>
-            <option value="NEAKTIVNA">NEAKTIVNA</option>
-            <option value="ISKLJUCENA">ISKLJUCENA</option>
-          </select>
         </div>
 
         <div className="flex items-center gap-2">
@@ -84,7 +83,6 @@ export function SubscriptionsTable({
         </div>
       </div>
 
-      {/* CREATE FORM */}
       {creating && canCreate && (
         <CreateForm
           brands={brands}
@@ -96,13 +94,13 @@ export function SubscriptionsTable({
         />
       )}
 
-      {/* TABLE */}
       <div className="mt-4 overflow-auto">
         <table className="w-full text-left text-sm">
           <thead className="text-zinc-300">
             <tr className="border-b border-zinc-800">
               <th className="py-2 pr-4">Brend</th>
               <th className="py-2 pr-4">Paket</th>
+              <th className="py-2 pr-4">Email</th>
               <th className="py-2 pr-4">OD</th>
               <th className="py-2 pr-4">DO</th>
               <th className="py-2 pr-4">Status</th>
@@ -110,10 +108,13 @@ export function SubscriptionsTable({
             </tr>
           </thead>
           <tbody className="text-zinc-200">
-            {filtered.map((r) => (
+            {rows.map((r) => (
               <tr key={r.id} className="border-b border-zinc-900">
-                <td className="py-2 pr-4">{r.brand_name ?? r.brand_id}</td>
-                <td className="py-2 pr-4">{r.package_name ?? r.package_id}</td>
+                <td className="py-2 pr-4">{r.brand_name}</td>
+                <td className="py-2 pr-4">{r.package_name}</td>
+                <td className="py-2 pr-4 text-zinc-400">
+                  {r.client_email ?? "—"}
+                </td>
                 <td className="py-2 pr-4">{r.start_date}</td>
                 <td className="py-2 pr-4">{r.end_date}</td>
                 <td className="py-2 pr-4">{r.status}</td>
@@ -135,14 +136,12 @@ export function SubscriptionsTable({
         </table>
 
         <div className="mt-3 text-xs text-zinc-400">
-          Prikazano: {filtered.length} / {rows.length}
+          Prikazano: {rows.length}
         </div>
       </div>
     </div>
   );
 }
-
-/* ================= CREATE FORM ================= */
 
 function CreateForm({
   brands,
@@ -212,14 +211,14 @@ function CreateForm({
 
         <input
           className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
-          placeholder="Datum plaćanja (opcionalno)"
+          placeholder="Datum plaćanja"
           value={payment_date}
           onChange={(e) => setPay(e.target.value)}
         />
 
         <input
           className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
-          placeholder="Napomena (opcionalno)"
+          placeholder="Napomena"
           value={note}
           onChange={(e) => setNote(e.target.value)}
         />
