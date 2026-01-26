@@ -28,8 +28,13 @@ export default async function SubscriptionsPage(props: any) {
     ? subsRes.data
     : [];
 
-  const brandsRes = await supabase.from("brands").select("id,name");
-  const pkgsRes = await supabase.from("packages").select("id,name");
+  const brandsRes = await supabase
+    .from("brands")
+    .select("id,name");
+
+  const pkgsRes = await supabase
+    .from("packages")
+    .select("id,name");
 
   const brandMap = new Map(
     (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
@@ -93,7 +98,6 @@ export default async function SubscriptionsPage(props: any) {
           packages={pkgsRes.data ?? []}
           canCreate={canCreate}
           onDisable={disable}
-          onEnable={enable}
           onCreate={create}
         />
       </div>
