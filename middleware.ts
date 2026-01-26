@@ -11,7 +11,8 @@ type CookieToSet = {
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  const supabase = createServerClient(
+  // ❗ Supabase client ostaje, ali BEZ auth.getUser()
+  createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
@@ -32,8 +33,8 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // 🔑 KLJUČNO: obnavlja session i postavlja cookie
-  await supabase.auth.getUser();
+  // ⛔ NEMA supabase.auth.getUser()
+  // ⛔ NEMA session refresha u middlewareu
 
   return response;
 }
