@@ -1,7 +1,7 @@
-import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
 
 export default async function SupabaseTestPage() {
-  const supabase = await supabaseServer();
+  const supabase = supabaseReadonly();
 
   const { data, error } = await supabase
     .from("brands")
@@ -10,7 +10,7 @@ export default async function SupabaseTestPage() {
 
   return (
     <div style={{ padding: 40 }}>
-      <h1>SUPABASE TEST</h1>
+      <h1>SUPABASE TEST (READONLY)</h1>
 
       {error ? (
         <pre style={{ color: "red" }}>
