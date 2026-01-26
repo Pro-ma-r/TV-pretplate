@@ -58,14 +58,13 @@ export function AppShell({
               {role.toUpperCase()}
             </span>
 
-            {/* ⛔ KRITIČNO: prefetch MORA BITI FALSE */}
-            <Link
+            {/* LOGOUT — NAMJERNO OBIČAN <a>, NE next/link */}
+            <a
+              href="/api/logout"
               className="text-zinc-300 hover:text-white transition"
-              href="/logout"
-              prefetch={false}
             >
               Logout
-            </Link>
+            </a>
           </nav>
         </div>
       </header>
