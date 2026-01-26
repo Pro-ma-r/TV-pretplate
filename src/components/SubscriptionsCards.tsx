@@ -9,46 +9,65 @@ type Row = SubscriptionWithStatus & {
 
 export function SubscriptionsCards({
   rows,
-  onDisable
+  onDisable,
+  onEnable
 }: {
   rows: Row[];
-  onDisable: (id: string) => void;
+  onDisable: (id: string) => Promise<void>;
+  onEnable: (id: string) => Promise<void>;
 }) {
   return (
     <div className="flex flex-col gap-3">
-      {rows.map((r) => (
-        <div
-          key={r.id}
-          className="rounded-xl border p-4 bg-white shadow-sm"
-        >
-          <div className="font-semibold text-lg">
-            {r.brand_name ?? "—"}
-          </div>
+      {rows.map((r) => {
+        const status = deriveStatus(r);
 
-          <div className="text-sm text-gray-600 mt-1">
-            Paket: {r.package_name ?? "—"}
-          </div>
+        return (
+          <div
+            key={r.id}
+            className="rounded-xl border p-4 bg-white shadow-sm"
+          >
+            <div className="font-semibold text-lg">
+              {r.brand_name ?? "—"}
+            </div>
 
-          <div className="mt-2">
-            <StatusBadge status={deriveStatus(r)} />
-          </div>
+            <div className="text-sm text-gray-600 mt-1">
+              Paket: {r.package_name ?? "—"}
+            </div>
 
-          <div className="text-sm mt-1 text-gray-600">
-            Vrijedi do: {r.end_date}
-          </div>
+            <div className="mt-2">
+              <StatusBadge status={status} />
+            </div>
 
-          <div className="mt-4">
-            {r.manually_disabled ? null : (
-              <button
-                onClick={() => onDisable(r.id)}
-                className="px-3 py-1.5 rounded-md text-sm bg-red-600 text-white"
-              >
-                Isključi
-              </button>
-            )}
+            <div className="text-sm mt-1 text-gray-600">
+              Vrijedi do: {r.end_date}
+            </div>
+
+            <div className="mt-4 flex gap-2">
+              {status === "AKTIVAN" && (
+                <form action={onDisable.bind(null, r.id)}>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 rounded-md text-sm bg-red-600 text-white"
+                  >
+                    Isključi
+                  </button>
+                </form>
+              )}
+
+              {status === "ISKLJUČEN" && (
+                <form action={onEnable.bind(null, r.id)}>
+                  <button
+                    type="submit"
+                    className="px-3 py-1.5 rounded-md text-sm bg-green-600 text-white"
+                  >
+                    Uključi
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
