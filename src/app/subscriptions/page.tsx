@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
@@ -10,8 +9,16 @@ type SubscriptionRow = SubscriptionWithStatus & {
   client_email?: string;
 };
 
+// ⛔ Dummy server actions – samo za TypeScript
+async function noopDisable(_: string) {
+  "use server";
+}
+
+async function noopCreate(_: any) {
+  "use server";
+}
+
 export default async function SubscriptionsPage(props: any) {
-  // ✅ READ-ONLY Supabase client (NE dira cookies)
   const supabase = supabaseReadonly();
 
   const q = props?.searchParams?.q ?? "";
@@ -45,18 +52,15 @@ export default async function SubscriptionsPage(props: any) {
     package_name: r.package_name ?? pkgMap.get(r.package_id)
   }));
 
-  // ⚠️ Auth se NE radi u page.tsx (Next 15)
-  // Pretpostavka: auth je riješen middlewareom ili routingom
-  const canCreate = true;
-
   return (
     <AppShell title="Pretplate" role="admin">
       <SubscriptionsTable
         rows={finalRows}
         brands={brandsRes.data ?? []}
         packages={pkgsRes.data ?? []}
-        canCreate={canCreate}
-        // ⛔ NEMA server actions u pageu
+        canCreate={false}
+        onDisable={noopDisable}
+        onCreate={noopCreate}
       />
     </AppShell>
   );
