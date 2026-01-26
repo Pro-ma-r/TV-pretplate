@@ -4,6 +4,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { ExportButtons } from "./ExportButtons";
+import {
+  disableSubscription,
+  enableSubscription
+} from "@/src/app/subscriptions/actions";
 
 type Row = SubscriptionWithStatus & {
   brand_name?: string;
@@ -34,39 +38,19 @@ export function SubscriptionsTable({
   rows,
   brands,
   packages,
-  canCreate,
-  onDisable,
-  onCreate
+  canCreate
 }: {
   rows: Row[];
   brands: Array<{ id: string; name: string }>;
   packages: Array<{ id: string; name: string }>;
   canCreate: boolean;
-  onDisable: (id: string) => Promise<void>;
-  onCreate: (payload: {
-    brand_id: string;
-    package_id: string;
-    start_date: string;
-    end_date: string;
-    payment_date?: string;
-    note?: string;
-  }) => Promise<void>;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // ✅ SIGURNO ČITANJE search params
-  const initialQ = searchParams?.get("q") ?? "";
-
-  const [q, setQ] = useState(initialQ);
+  const [q, setQ] = useState(searchParams?.get("q") ?? "");
   const [status, setStatus] = useState<"" | DerivedStatus>("");
 
-  const [toast, setToast] = useState<{
-    message: string;
-    undo?: () => void;
-  } | null>(null);
-
-  // sync search → URL (bez oslanjanja na searchParams)
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -87,45 +71,6 @@ export function SubscriptionsTable({
     );
   }, [rowsWithStatus, status]);
 
-  async function handleDisable(
-    r: Row & { _derivedStatus: DerivedStatus }
-  ) {
-    const ok = confirm(
-      `Jesi siguran da želiš isključiti brend "${r.brand_name}"?`
-    );
-    if (!ok) return;
-
-    await onDisable(r.id);
-
-    setToast({
-      message: `Brend "${r.brand_name}" je isključen.`,
-      undo: async () => {
-        await fetch("/api/enable-subscription", {
-          method: "POST",
-          body: JSON.stringify({ id: r.id })
-        });
-        router.refresh();
-      }
-    });
-
-    router.refresh();
-  }
-
-  async function handleEnable(
-    r: Row & { _derivedStatus: DerivedStatus }
-  ) {
-    await fetch("/api/enable-subscription", {
-      method: "POST",
-      body: JSON.stringify({ id: r.id })
-    });
-
-    setToast({
-      message: `Brend "${r.brand_name}" je uključen.`
-    });
-
-    router.refresh();
-  }
-
   const exportRows = filteredRows.map((r) => ({
     brend: r.brand_name,
     email: r.client_email ?? "",
@@ -136,28 +81,6 @@ export function SubscriptionsTable({
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-      {toast && (
-        <div className="mb-3 flex items-center justify-between rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm">
-          <span>{toast.message}</span>
-          <div className="flex gap-2">
-            {toast.undo && (
-              <button
-                onClick={toast.undo}
-                className="text-purple-400 hover:underline"
-              >
-                Undo
-              </button>
-            )}
-            <button
-              onClick={() => setToast(null)}
-              className="text-zinc-400 hover:text-white"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-2">
           <input
@@ -196,7 +119,7 @@ export function SubscriptionsTable({
           <tbody className="text-zinc-200">
             {filteredRows.map((r) => (
               <tr key={r.id} className="border-b border-zinc-900">
-                <td className="py-2 pr-4 font-medium hover:underline cursor-pointer">
+                <td className="py-2 pr-4 font-medium">
                   {r.brand_name}
                 </td>
                 <td className="py-2 pr-4 text-zinc-400">
@@ -210,19 +133,25 @@ export function SubscriptionsTable({
                 </td>
                 <td className="py-2 pr-4">
                   {r._derivedStatus === "ISKLJUCENA" ? (
-                    <button
-                      onClick={() => handleEnable(r)}
-                      className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs hover:bg-zinc-800"
-                    >
-                      Uključi
-                    </button>
+                    <form action={enableSubscription}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button
+                        type="submit"
+                        className="rounded-xl border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs hover:bg-zinc-800"
+                      >
+                        Uključi
+                      </button>
+                    </form>
                   ) : (
-                    <button
-                      onClick={() => handleDisable(r)}
-                      className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
-                    >
-                      Isključi
-                    </button>
+                    <form action={disableSubscription}>
+                      <input type="hidden" name="id" value={r.id} />
+                      <button
+                        type="submit"
+                        className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
+                      >
+                        Isključi
+                      </button>
+                    </form>
                   )}
                 </td>
               </tr>
