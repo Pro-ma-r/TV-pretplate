@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/src/lib/auth";
-import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
@@ -12,7 +12,7 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  const supabase = await supabaseServer();
+  const supabase = supabaseReadonly();
 
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
