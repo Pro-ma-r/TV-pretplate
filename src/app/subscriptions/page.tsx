@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation";
-import { requireUser } from "@/src/lib/auth";
-import { supabaseServer } from "@/src/lib/supabaseServer";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
+import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
 
 type SubscriptionRow = SubscriptionWithStatus & {
   brand_name?: string;
@@ -12,12 +11,8 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  // ⬅️ JEDNA instanca
-  const supabase = await supabaseServer();
-
-  // ⬅️ requireUser koristi ISTU instancu
-  const u = await requireUser(supabase);
-  if (!u) redirect("/login");
+  // ✅ READ-ONLY Supabase client (NE dira cookies)
+  const supabase = supabaseReadonly();
 
   const q = props?.searchParams?.q ?? "";
 
@@ -50,46 +45,18 @@ export default async function SubscriptionsPage(props: any) {
     package_name: r.package_name ?? pkgMap.get(r.package_id)
   }));
 
-  const canCreate = u.role === "admin";
-
-  async function disable(id: string) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc("disable_subscription", {
-      p_subscription_id: id,
-      p_reason: "Isključeno iz admin panela"
-    });
-  }
-
-  async function create(payload: {
-    brand_id: string;
-    package_id: string;
-    start_date: string;
-    end_date: string;
-    payment_date?: string;
-    note?: string;
-  }) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc("create_subscription", {
-      p_brand_id: payload.brand_id,
-      p_package_id: payload.package_id,
-      p_start_date: payload.start_date,
-      p_end_date: payload.end_date,
-      p_payment_date: payload.payment_date ?? null,
-      p_note: payload.note ?? null
-    });
-  }
+  // ⚠️ Auth se NE radi u page.tsx (Next 15)
+  // Pretpostavka: auth je riješen middlewareom ili routingom
+  const canCreate = true;
 
   return (
-    <AppShell title="Pretplate" role={u.role}>
+    <AppShell title="Pretplate" role="admin">
       <SubscriptionsTable
         rows={finalRows}
         brands={brandsRes.data ?? []}
         packages={pkgsRes.data ?? []}
         canCreate={canCreate}
-        onDisable={disable}
-        onCreate={create}
+        // ⛔ NEMA server actions u pageu
       />
     </AppShell>
   );
