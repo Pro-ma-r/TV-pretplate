@@ -6,6 +6,12 @@ import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
 import { SubscriptionsCards } from "@/src/components/SubscriptionsCards";
 
+// ✅ SERVER ACTIONS – IZVOJENI FILE
+import {
+  disableSubscription,
+  enableSubscription
+} from "./actions";
+
 type SubscriptionRow = SubscriptionWithStatus & {
   brand_name?: string;
   package_name?: string;
@@ -13,8 +19,10 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
+  // ⬅️ JEDNA instanca
   const supabase = await supabaseServer();
 
+  // ⬅️ auth
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
@@ -51,23 +59,6 @@ export default async function SubscriptionsPage(props: any) {
 
   const canCreate = u.role === "admin";
 
-  async function disable(id: string) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc("disable_subscription", {
-      p_subscription_id: id,
-      p_reason: "Isključeno iz admin panela"
-    });
-  }
-
-  async function enable(id: string) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc("enable_subscription", {
-      p_subscription_id: id
-    });
-  }
-
   async function create(payload: {
     brand_id: string;
     package_id: string;
@@ -97,7 +88,7 @@ export default async function SubscriptionsPage(props: any) {
           brands={brandsRes.data ?? []}
           packages={pkgsRes.data ?? []}
           canCreate={canCreate}
-          onDisable={disable}
+          onDisable={disableSubscription}
           onCreate={create}
         />
       </div>
@@ -106,8 +97,8 @@ export default async function SubscriptionsPage(props: any) {
       <div className="block md:hidden">
         <SubscriptionsCards
           rows={finalRows}
-          onDisable={disable}
-          onEnable={enable}
+          onDisable={disableSubscription}
+          onEnable={enableSubscription}
         />
       </div>
     </AppShell>
