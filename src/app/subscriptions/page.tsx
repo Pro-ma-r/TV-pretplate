@@ -28,13 +28,8 @@ export default async function SubscriptionsPage(props: any) {
     ? subsRes.data
     : [];
 
-  const brandsRes = await supabase
-    .from("brands")
-    .select("id,name");
-
-  const pkgsRes = await supabase
-    .from("packages")
-    .select("id,name");
+  const brandsRes = await supabase.from("brands").select("id,name");
+  const pkgsRes = await supabase.from("packages").select("id,name");
 
   const brandMap = new Map(
     (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
@@ -57,6 +52,14 @@ export default async function SubscriptionsPage(props: any) {
     await sb.rpc("disable_subscription", {
       p_subscription_id: id,
       p_reason: "Isključeno iz admin panela"
+    });
+  }
+
+  async function enable(id: string) {
+    "use server";
+    const sb = await supabaseServer();
+    await sb.rpc("enable_subscription", {
+      p_subscription_id: id
     });
   }
 
@@ -90,6 +93,7 @@ export default async function SubscriptionsPage(props: any) {
           packages={pkgsRes.data ?? []}
           canCreate={canCreate}
           onDisable={disable}
+          onEnable={enable}
           onCreate={create}
         />
       </div>
@@ -99,6 +103,7 @@ export default async function SubscriptionsPage(props: any) {
         <SubscriptionsCards
           rows={finalRows}
           onDisable={disable}
+          onEnable={enable}
         />
       </div>
     </AppShell>
