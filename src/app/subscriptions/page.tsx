@@ -4,6 +4,7 @@ import { supabaseServer } from "@/src/lib/supabaseServer";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
+import { SubscriptionsCards } from "@/src/components/SubscriptionsCards";
 
 type SubscriptionRow = SubscriptionWithStatus & {
   brand_name?: string;
@@ -12,10 +13,8 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  // ⬅️ JEDNA instanca
   const supabase = await supabaseServer();
 
-  // ⬅️ requireUser koristi ISTU instancu
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
@@ -83,14 +82,25 @@ export default async function SubscriptionsPage(props: any) {
 
   return (
     <AppShell title="Pretplate" role={u.role}>
-      <SubscriptionsTable
-        rows={finalRows}
-        brands={brandsRes.data ?? []}
-        packages={pkgsRes.data ?? []}
-        canCreate={canCreate}
-        onDisable={disable}
-        onCreate={create}
-      />
+      {/* DESKTOP */}
+      <div className="hidden md:block">
+        <SubscriptionsTable
+          rows={finalRows}
+          brands={brandsRes.data ?? []}
+          packages={pkgsRes.data ?? []}
+          canCreate={canCreate}
+          onDisable={disable}
+          onCreate={create}
+        />
+      </div>
+
+      {/* MOBILE */}
+      <div className="block md:hidden">
+        <SubscriptionsCards
+          rows={finalRows}
+          onDisable={disable}
+        />
+      </div>
     </AppShell>
   );
 }
