@@ -6,10 +6,10 @@ import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
 import { SubscriptionsCards } from "@/src/components/SubscriptionsCards";
 
-// ✅ SERVER ACTIONS – IZVOJENI FILE
 import {
   disableSubscription,
-  enableSubscription
+  enableSubscription,
+  createSubscription
 } from "./actions";
 
 type SubscriptionRow = SubscriptionWithStatus & {
@@ -19,10 +19,8 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  // ⬅️ JEDNA instanca
   const supabase = await supabaseServer();
 
-  // ⬅️ auth
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
@@ -36,13 +34,8 @@ export default async function SubscriptionsPage(props: any) {
     ? subsRes.data
     : [];
 
-  const brandsRes = await supabase
-    .from("brands")
-    .select("id,name");
-
-  const pkgsRes = await supabase
-    .from("packages")
-    .select("id,name");
+  const brandsRes = await supabase.from("brands").select("id,name");
+  const pkgsRes = await supabase.from("packages").select("id,name");
 
   const brandMap = new Map(
     (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
@@ -59,26 +52,6 @@ export default async function SubscriptionsPage(props: any) {
 
   const canCreate = u.role === "admin";
 
-  async function create(payload: {
-    brand_id: string;
-    package_id: string;
-    start_date: string;
-    end_date: string;
-    payment_date?: string;
-    note?: string;
-  }) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc("create_subscription", {
-      p_brand_id: payload.brand_id,
-      p_package_id: payload.package_id,
-      p_start_date: payload.start_date,
-      p_end_date: payload.end_date,
-      p_payment_date: payload.payment_date ?? null,
-      p_note: payload.note ?? null
-    });
-  }
-
   return (
     <AppShell title="Pretplate" role={u.role}>
       {/* DESKTOP */}
@@ -89,7 +62,7 @@ export default async function SubscriptionsPage(props: any) {
           packages={pkgsRes.data ?? []}
           canCreate={canCreate}
           onDisable={disableSubscription}
-          onCreate={create}
+          onCreate={createSubscription}
         />
       </div>
 
