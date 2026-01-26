@@ -55,21 +55,23 @@ export function SubscriptionsTable({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [q, setQ] = useState(searchParams.get("q") ?? "");
+  // ✅ SIGURNO ČITANJE search params
+  const initialQ = searchParams?.get("q") ?? "";
+
+  const [q, setQ] = useState(initialQ);
   const [status, setStatus] = useState<"" | DerivedStatus>("");
+
   const [toast, setToast] = useState<{
     message: string;
     undo?: () => void;
   } | null>(null);
 
-  // sync search → URL
+  // sync search → URL (bez oslanjanja na searchParams)
   useEffect(() => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
     if (q) params.set("q", q);
-    else params.delete("q");
-
     router.replace(`/subscriptions?${params.toString()}`);
-  }, [q]);
+  }, [q, router]);
 
   const rowsWithStatus = useMemo(() => {
     return rows.map((r) => ({
@@ -85,7 +87,9 @@ export function SubscriptionsTable({
     );
   }, [rowsWithStatus, status]);
 
-  async function handleDisable(r: Row & { _derivedStatus: DerivedStatus }) {
+  async function handleDisable(
+    r: Row & { _derivedStatus: DerivedStatus }
+  ) {
     const ok = confirm(
       `Jesi siguran da želiš isključiti brend "${r.brand_name}"?`
     );
@@ -107,7 +111,9 @@ export function SubscriptionsTable({
     router.refresh();
   }
 
-  async function handleEnable(r: Row & { _derivedStatus: DerivedStatus }) {
+  async function handleEnable(
+    r: Row & { _derivedStatus: DerivedStatus }
+  ) {
     await fetch("/api/enable-subscription", {
       method: "POST",
       body: JSON.stringify({ id: r.id })
