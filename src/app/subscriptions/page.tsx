@@ -1,7 +1,9 @@
+import { redirect } from "next/navigation";
+import { requireUser } from "@/src/lib/auth";
+import { supabaseServer } from "@/src/lib/supabaseServer";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
-import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
 
 type SubscriptionRow = SubscriptionWithStatus & {
   brand_name?: string;
@@ -9,17 +11,11 @@ type SubscriptionRow = SubscriptionWithStatus & {
   client_email?: string;
 };
 
-// ⛔ Dummy server actions – samo za TypeScript
-async function noopDisable(_: string) {
-  "use server";
-}
-
-async function noopCreate(_: any) {
-  "use server";
-}
-
 export default async function SubscriptionsPage(props: any) {
-  const supabase = supabaseReadonly();
+  const supabase = await supabaseServer();
+
+  const u = await requireUser(supabase);
+  if (!u) redirect("/login");
 
   const q = props?.searchParams?.q ?? "";
 
@@ -53,14 +49,12 @@ export default async function SubscriptionsPage(props: any) {
   }));
 
   return (
-    <AppShell title="Pretplate" role="admin">
+    <AppShell title="Pretplate" role={u.role}>
       <SubscriptionsTable
         rows={finalRows}
         brands={brandsRes.data ?? []}
         packages={pkgsRes.data ?? []}
-        canCreate={false}
-        onDisable={noopDisable}
-        onCreate={noopCreate}
+        canCreate={u.role === "admin"}
       />
     </AppShell>
   );
