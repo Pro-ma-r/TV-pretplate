@@ -15,8 +15,7 @@ function deriveStatus(s: {
   end_date: string | null;
 }) {
   if (s.manually_disabled) return "Isključena";
-  if (s.end_date && new Date(s.end_date) < new Date())
-    return "Neaktivna";
+  if (s.end_date && new Date(s.end_date) < new Date()) return "Neaktivna";
   return "Aktivna";
 }
 
@@ -34,52 +33,56 @@ export default async function BrandPage({
   // BRAND + CLIENT
   const { data: brand } = await supabase
     .from("brands")
-    .select(`
+    .select(
+      `
       id,
       name,
       email,
       contact_person,
       note,
+      client_id,
       clients (
+        id,
         name,
         oib,
         address,
-        phone
+        phone,
+        email
       )
-    `)
+    `
+    )
     .eq("id", id)
     .single();
 
   if (!brand) {
     return (
       <AppShell title="Brend" role={u.role}>
-        <div className="text-sm text-zinc-400">
-          Brend ne postoji.
-        </div>
+        <div className="text-sm text-zinc-400">Brend ne postoji.</div>
       </AppShell>
     );
   }
 
-  const client = brand.clients?.[0] ?? null;
+  // ✅ ISPRAVNO: clients je objekt (ne array) kod many-to-one relacije
+  const client = (brand as any).clients ?? null;
 
-  // PRETPLATE (BEZ JOINA)
+  // PRETPLATE (bez join-a; mapiranje radi)
   const { data: subscriptions } = await supabase
     .from("subscriptions")
-    .select(`
+    .select(
+      `
       id,
       start_date,
       end_date,
       manually_disabled,
       note,
       package_id
-    `)
+    `
+    )
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
   // SVI PAKETI
-  const { data: packages } = await supabase
-    .from("packages")
-    .select("id, name");
+  const { data: packages } = await supabase.from("packages").select("id, name");
 
   const packageMap =
     packages?.reduce<Record<string, string>>((acc, p) => {
@@ -93,27 +96,44 @@ export default async function BrandPage({
     const value = formData.get("value") as string | null;
 
     const sb = await supabaseServer();
-    await sb
-      .from("brands")
-      .update({ note: value || null })
-      .eq("id", id);
+    await sb.from("brands").update({ note: value || null }).eq("id", id);
   }
 
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <h2 className="mb-3 text-lg font-semibold">
-          Profil brenda
-        </h2>
+        <h2 className="mb-3 text-lg font-semibold">Profil brenda</h2>
 
         <div className="grid gap-3 text-sm text-zinc-300">
-          <div><span className="text-zinc-500">Klijent:</span> {client?.name ?? "—"}</div>
-          <div><span className="text-zinc-500">OIB:</span> {client?.oib ?? "—"}</div>
-          <div><span className="text-zinc-500">Adresa:</span> {client?.address ?? "—"}</div>
-          <div><span className="text-zinc-500">Telefon:</span> {client?.phone ?? "—"}</div>
-          <div><span className="text-zinc-500">Email:</span> {brand.email ?? "—"}</div>
-          <div><span className="text-zinc-500">Kontakt osoba:</span> {brand.contact_person ?? "—"}</div>
+          <div>
+            <span className="text-zinc-500">Klijent:</span>{" "}
+            {client?.name ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">OIB:</span> {client?.oib ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Adresa:</span>{" "}
+            {client?.address ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Telefon:</span>{" "}
+            {client?.phone ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Email:</span>{" "}
+            {brand.email ?? client?.email ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Kontakt osoba:</span>{" "}
+            {brand.contact_person ?? "—"}
+          </div>
 
           <div>
             <span className="text-zinc-500">Napomena:</span>
@@ -158,8 +178,7 @@ export default async function BrandPage({
 
               {s.note && (
                 <div>
-                  <span className="text-zinc-500">Napomena:</span>{" "}
-                  {s.note}
+                  <span className="text-zinc-500">Napomena:</span> {s.note}
                 </div>
               )}
             </div>
