@@ -39,14 +39,14 @@ export default async function BrandPage({
       `
       id,
       name,
-      contact_person,
       note,
       clients (
         name,
         email,
         oib,
         address,
-        phone
+        phone,
+        note
       )
     `
     )
@@ -83,18 +83,15 @@ export default async function BrandPage({
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
-  // INLINE UPDATE
-  async function updateBrandField(
-    field: "contact_person" | "note",
-    formData: FormData
-  ) {
+  // INLINE UPDATE – NAPOMENA BRENDA
+  async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
 
     const sb = await supabaseServer();
     await sb
       .from("brands")
-      .update({ [field]: value || null })
+      .update({ note: value || null })
       .eq("id", id);
   }
 
@@ -132,31 +129,17 @@ export default async function BrandPage({
             {client?.email ?? "—"}
           </div>
 
-          {/* KONTAKT OSOBA */}
           <div>
             <span className="text-zinc-500">
               Kontakt osoba:
-            </span>
-            <form
-              action={updateBrandField.bind(
-                null,
-                "contact_person"
-              )}
-            >
-              <input
-                name="value"
-                defaultValue={brand.contact_person ?? ""}
-                className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm"
-              />
-            </form>
+            </span>{" "}
+            {client?.note ?? "—"}
           </div>
 
-          {/* NAPOMENA */}
+          {/* NAPOMENA BRENDA */}
           <div>
             <span className="text-zinc-500">Napomena:</span>
-            <form
-              action={updateBrandField.bind(null, "note")}
-            >
+            <form action={updateBrandNote}>
               <textarea
                 name="value"
                 defaultValue={brand.note ?? ""}
@@ -182,7 +165,7 @@ export default async function BrandPage({
             <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.packages?.name ?? "—"}
+                {s.packages?.[0]?.name ?? "—"}
               </div>
 
               <div>
