@@ -40,7 +40,10 @@ export default async function BrandPage({
       *,
       clients (
         name,
-        email
+        email,
+        oib,
+        address,
+        phone
       )
     `
     )
@@ -76,7 +79,7 @@ export default async function BrandPage({
     .eq("brand_id", brand.id)
     .order("start_date", { ascending: false });
 
-  // 🔧 INLINE UPDATE – ISPRAVNO ZA NEXT 15
+  // INLINE UPDATE
   async function updateBrandField(
     field: "contact_person" | "note",
     formData: FormData
@@ -106,11 +109,26 @@ export default async function BrandPage({
           </div>
 
           <div>
+            <span className="text-zinc-500">OIB:</span>{" "}
+            {brand.clients?.oib ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Adresa:</span>{" "}
+            {brand.clients?.address ?? "—"}
+          </div>
+
+          <div>
+            <span className="text-zinc-500">Telefon:</span>{" "}
+            {brand.clients?.phone ?? "—"}
+          </div>
+
+          <div>
             <span className="text-zinc-500">Email:</span>{" "}
             {displayEmail}
           </div>
 
-          {/* KONTAKT OSOBA – INLINE */}
+          {/* KONTAKT OSOBA */}
           <div>
             <span className="text-zinc-500">
               Kontakt osoba:
@@ -130,7 +148,7 @@ export default async function BrandPage({
             </form>
           </div>
 
-          {/* NAPOMENA – INLINE */}
+          {/* NAPOMENA */}
           <div>
             <span className="text-zinc-500">Napomena:</span>
             <form
@@ -148,7 +166,7 @@ export default async function BrandPage({
         </div>
       </div>
 
-      {/* PRETPLATE – KARTICE */}
+      {/* PRETPLATE */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">
           Pretplate ({subscriptions?.length ?? 0})
