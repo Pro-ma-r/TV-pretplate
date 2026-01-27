@@ -51,6 +51,8 @@ export function SubscriptionsTable({
   const [q, setQ] = useState(searchParams?.get("q") ?? "");
   const [status, setStatus] = useState<"" | DerivedStatus>("");
 
+  const [toast, setToast] = useState<string | null>(null);
+
   useEffect(() => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
@@ -81,6 +83,12 @@ export function SubscriptionsTable({
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
+      {toast && (
+        <div className="mb-3 rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-2 text-sm">
+          {toast}
+        </div>
+      )}
+
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap gap-2">
           <input
@@ -133,7 +141,13 @@ export function SubscriptionsTable({
                 </td>
                 <td className="py-2 pr-4">
                   {r._derivedStatus === "ISKLJUCENA" ? (
-                    <form action={enableSubscription}>
+                    <form
+                      action={async (fd) => {
+                        await enableSubscription(fd);
+                        setToast(`Brend "${r.brand_name}" je uključen.`);
+                        router.refresh();
+                      }}
+                    >
                       <input type="hidden" name="id" value={r.id} />
                       <button
                         type="submit"
@@ -143,7 +157,20 @@ export function SubscriptionsTable({
                       </button>
                     </form>
                   ) : (
-                    <form action={disableSubscription}>
+                    <form
+                      action={async (fd) => {
+                        const ok = confirm(
+                          `Jesi li siguran da želiš isključiti brend "${r.brand_name}"?`
+                        );
+                        if (!ok) return;
+
+                        await disableSubscription(fd);
+                        setToast(
+                          `Brend "${r.brand_name}" je isključen.`
+                        );
+                        router.refresh();
+                      }}
+                    >
                       <input type="hidden" name="id" value={r.id} />
                       <button
                         type="submit"
