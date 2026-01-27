@@ -27,16 +27,24 @@ export default async function BrandPage({
 }) {
   const { id } = await params;
 
-  // ⬅️ OVO JE KLJUČNO
   const supabase = await supabaseServer();
 
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
-  // BRAND
+  // 1️⃣ BRAND + CLIENT
   const { data: brand } = await supabase
     .from("brands")
-    .select("*")
+    .select(
+      `
+      *,
+      clients (
+        id,
+        name,
+        email
+      )
+    `
+    )
     .eq("id", id)
     .single();
 
@@ -50,43 +58,56 @@ export default async function BrandPage({
     );
   }
 
-  // PRETPLATE TOG BRENDA
+  const displayEmail =
+    brand.clients?.email ?? brand.email ?? "—";
+
+  // 2️⃣ PRETPLATE + PAKETI
   const { data: subscriptions } = await supabase
     .from("subscriptions")
     .select(
       `
+      id,
+      start_date,
+      end_date,
+      payment_date,
+      manually_disabled,
+      disabled_note,
+      note,
+      packages (
         id,
-        start_date,
-        end_date,
-        payment_date,
-        manually_disabled,
-        disabled_note,
-        note,
-        packages ( name )
-      `
+        name
+      )
+    `
     )
     .eq("brand_id", brand.id)
     .order("start_date", { ascending: false });
 
   return (
     <AppShell title={brand.name} role={u.role}>
-      {/* PODACI O BRENDu */}
+      {/* PROFIL BRENDA */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <h2 className="mb-2 text-lg font-semibold">
-          Podaci o brendu
+        <h2 className="mb-3 text-lg font-semibold">
+          Profil brenda
         </h2>
 
         <div className="grid gap-2 text-sm text-zinc-300">
           <div>
-            <span className="text-zinc-500">Email:</span>{" "}
-            {brand.email ?? "—"}
+            <span className="text-zinc-500">Klijent:</span>{" "}
+            {brand.clients?.name ?? "—"}
           </div>
+
+          <div>
+            <span className="text-zinc-500">Email:</span>{" "}
+            {displayEmail}
+          </div>
+
           <div>
             <span className="text-zinc-500">
               Kontakt osoba:
             </span>{" "}
             {brand.contact_person ?? "—"}
           </div>
+
           <div>
             <span className="text-zinc-500">Napomena:</span>{" "}
             {brand.note ?? "—"}
