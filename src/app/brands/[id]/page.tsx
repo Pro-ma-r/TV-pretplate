@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
+import { disableBrand, enableBrand } from "@/src/app/brands/actions";
 
 function formatDate(d?: string | null) {
   if (!d) return "—";
@@ -40,7 +41,6 @@ export default async function BrandPage({
       email,
       contact_person,
       note,
-      visible_on_web,
       client_id,
       clients (
         id,
@@ -92,6 +92,10 @@ export default async function BrandPage({
       return acc;
     }, {}) ?? {};
 
+  // JE LI BREND ISKLJUČEN (AKO IMA BAR JEDNU manually_disabled)
+  const brandIsDisabled =
+    subscriptions?.some((s) => s.manually_disabled) ?? false;
+
   // UPDATE NAPOMENE
   async function updateBrandNote(formData: FormData) {
     "use server";
@@ -101,19 +105,6 @@ export default async function BrandPage({
     await sb.from("brands").update({ note: value || null }).eq("id", id);
   }
 
-  // ✅ TOGGLE VIDLJIVOSTI BRENDA (ISPRAVNO)
-  async function toggleBrandVisibility(formData: FormData) {
-    "use server";
-
-    const current = formData.get("current") === "true";
-
-    const sb = await supabaseServer();
-    await sb
-      .from("brands")
-      .update({ visible_on_web: !current })
-      .eq("id", id);
-  }
-
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
@@ -121,24 +112,33 @@ export default async function BrandPage({
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Profil brenda</h2>
 
-          {/* GUMB UKLJUČI / ISKLJUČI – NIVOU BRENDA */}
-          <form action={toggleBrandVisibility}>
-            <input
-              type="hidden"
-              name="current"
-              value={brand.visible_on_web ? "true" : "false"}
-            />
-            <button
-              type="submit"
-              className={`rounded-lg px-3 py-1 text-sm ${
-                brand.visible_on_web
-                  ? "bg-red-600/20 text-red-400 border border-red-600/40"
-                  : "bg-green-600/20 text-green-400 border border-green-600/40"
-              }`}
+          {/* ✅ GUMB UKLJUČI / ISKLJUČI – COPY PASTE LOGIKA */}
+          {brandIsDisabled ? (
+            <form action={enableBrand}>
+              <input type="hidden" name="brand_id" value={id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-sm text-green-400"
+              >
+                Uključi brend
+              </button>
+            </form>
+          ) : (
+            <form
+              action={async (fd) => {
+                "use server";
+                await disableBrand(fd);
+              }}
             >
-              {brand.visible_on_web ? "Isključi brend" : "Uključi brend"}
-            </button>
-          </form>
+              <input type="hidden" name="brand_id" value={id} />
+              <button
+                type="submit"
+                className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-sm text-red-400"
+              >
+                Isključi brend
+              </button>
+            </form>
+          )}
         </div>
 
         <div className="grid gap-3 text-sm text-zinc-300">
