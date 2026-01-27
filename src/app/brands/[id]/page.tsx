@@ -10,16 +10,6 @@ function formatDate(d?: string | null) {
   return new Date(d).toLocaleDateString("hr-HR");
 }
 
-function deriveStatus(s: {
-  manually_disabled: boolean | null;
-  end_date: string | null;
-}) {
-  if (s.manually_disabled) return "Isključena";
-  if (s.end_date && new Date(s.end_date) < new Date())
-    return "Neaktivna";
-  return "Aktivna";
-}
-
 export default async function BrandPage({
   params
 }: {
@@ -32,7 +22,7 @@ export default async function BrandPage({
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
-  // BRAND + CLIENT
+  // BRAND + CLIENT (NE DIRAMO)
   const { data: brand } = await supabase
     .from("brands")
     .select(
@@ -65,25 +55,23 @@ export default async function BrandPage({
 
   const client = brand.clients?.[0] ?? null;
 
-  // PRETPLATE
+  // ✅ PRETPLATE – ISPRAVAN IZVOR
   const { data: subscriptions } = await supabase
-    .from("subscriptions")
+    .from("subscriptions_with_status")
     .select(
       `
       id,
+      package,
       start_date,
       end_date,
-      manually_disabled,
-      note,
-      packages (
-        name
-      )
+      status,
+      note
     `
     )
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
-  // UPDATE NAPOMENE BRENDA
+  // UPDATE NAPOMENE BRENDA (NE DIRAMO)
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
@@ -104,39 +92,13 @@ export default async function BrandPage({
         </h2>
 
         <div className="grid gap-3 text-sm text-zinc-300">
-          <div>
-            <span className="text-zinc-500">Klijent:</span>{" "}
-            {client?.name ?? "—"}
-          </div>
+          <div><span className="text-zinc-500">Klijent:</span> {client?.name ?? "—"}</div>
+          <div><span className="text-zinc-500">OIB:</span> {client?.oib ?? "—"}</div>
+          <div><span className="text-zinc-500">Adresa:</span> {client?.address ?? "—"}</div>
+          <div><span className="text-zinc-500">Telefon:</span> {client?.phone ?? "—"}</div>
+          <div><span className="text-zinc-500">Email:</span> {brand.email ?? "—"}</div>
+          <div><span className="text-zinc-500">Kontakt osoba:</span> {brand.contact_person ?? "—"}</div>
 
-          <div>
-            <span className="text-zinc-500">OIB:</span>{" "}
-            {client?.oib ?? "—"}
-          </div>
-
-          <div>
-            <span className="text-zinc-500">Adresa:</span>{" "}
-            {client?.address ?? "—"}
-          </div>
-
-          <div>
-            <span className="text-zinc-500">Telefon:</span>{" "}
-            {client?.phone ?? "—"}
-          </div>
-
-          <div>
-            <span className="text-zinc-500">Email:</span>{" "}
-            {brand.email ?? "—"}
-          </div>
-
-          <div>
-            <span className="text-zinc-500">
-              Kontakt osoba:
-            </span>{" "}
-            {brand.contact_person ?? "—"}
-          </div>
-
-          {/* NAPOMENA BRENDA */}
           <div>
             <span className="text-zinc-500">Napomena:</span>
             <form action={updateBrandNote}>
@@ -165,25 +127,22 @@ export default async function BrandPage({
             <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.packages?.[0]?.name ?? "—"}
+                {s.package ?? "—"}
               </div>
 
               <div>
                 <span className="text-zinc-500">Period:</span>{" "}
-                {formatDate(s.start_date)} –{" "}
-                {formatDate(s.end_date)}
+                {formatDate(s.start_date)} – {formatDate(s.end_date)}
               </div>
 
               <div>
                 <span className="text-zinc-500">Status:</span>{" "}
-                {deriveStatus(s)}
+                {s.status ?? "—"}
               </div>
 
               {s.note && (
                 <div>
-                  <span className="text-zinc-500">
-                    Napomena:
-                  </span>{" "}
+                  <span className="text-zinc-500">Napomena:</span>{" "}
                   {s.note}
                 </div>
               )}
