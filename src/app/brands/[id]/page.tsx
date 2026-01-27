@@ -10,6 +10,16 @@ function formatDate(d?: string | null) {
   return new Date(d).toLocaleDateString("hr-HR");
 }
 
+function deriveStatus(s: {
+  manually_disabled: boolean | null;
+  end_date: string | null;
+}) {
+  if (s.manually_disabled) return "Isključena";
+  if (s.end_date && new Date(s.end_date) < new Date())
+    return "Neaktivna";
+  return "Aktivna";
+}
+
 export default async function BrandPage({
   params
 }: {
@@ -54,18 +64,16 @@ export default async function BrandPage({
 
   const client = brand.clients?.[0] ?? null;
 
-  // PRETPLATE – VIEW + JOIN NA PACKAGES
+  // ✅ PRETPLATE – PRAVA TABLICA + PRAVI JOIN
   const { data: subscriptions } = await supabase
-    .from("subscriptions_with_status")
+    .from("subscriptions")
     .select(`
       id,
-      brand_id,
       start_date,
       end_date,
-      status,
+      manually_disabled,
       note,
-      package_id,
-      packages!inner (
+      packages (
         name
       )
     `)
@@ -138,7 +146,7 @@ export default async function BrandPage({
 
               <div>
                 <span className="text-zinc-500">Status:</span>{" "}
-                {s.status ?? "—"}
+                {deriveStatus(s)}
               </div>
 
               {s.note && (
