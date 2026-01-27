@@ -58,13 +58,15 @@ export function AppShell({
               {role.toUpperCase()}
             </span>
 
-            {/* LOGOUT — NAMJERNO OBIČAN <a>, NE next/link */}
-            <a
-              href="/api/logout"
-              className="text-zinc-300 hover:text-white transition"
-            >
-              Logout
-            </a>
+            {/* ✅ ISPRAVAN LOGOUT */}
+            <form action="/logout" method="POST">
+              <button
+                type="submit"
+                className="text-zinc-300 hover:text-white transition"
+              >
+                Logout
+              </button>
+            </form>
           </nav>
         </div>
       </header>
