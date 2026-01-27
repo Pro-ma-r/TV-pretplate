@@ -28,7 +28,6 @@ export default async function BrandPage({
   const { id } = await params;
 
   const supabase = await supabaseServer();
-
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
@@ -41,7 +40,6 @@ export default async function BrandPage({
       email,
       contact_person,
       note,
-      client_id,
       clients (
         name,
         oib,
@@ -64,7 +62,7 @@ export default async function BrandPage({
 
   const client = brand.clients?.[0] ?? null;
 
-  // ✅ PRETPLATE – PRAVA TABLICA + PRAVI JOIN
+  // PRETPLATE (BEZ JOINA)
   const { data: subscriptions } = await supabase
     .from("subscriptions")
     .select(`
@@ -73,12 +71,21 @@ export default async function BrandPage({
       end_date,
       manually_disabled,
       note,
-      packages (
-        name
-      )
+      package_id
     `)
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
+
+  // SVI PAKETI
+  const { data: packages } = await supabase
+    .from("packages")
+    .select("id, name");
+
+  const packageMap =
+    packages?.reduce<Record<string, string>>((acc, p) => {
+      acc[p.id] = p.name;
+      return acc;
+    }, {}) ?? {};
 
   // UPDATE NAPOMENE BRENDA
   async function updateBrandNote(formData: FormData) {
@@ -136,7 +143,7 @@ export default async function BrandPage({
             <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.packages?.[0]?.name ?? "—"}
+                {packageMap[s.package_id] ?? "—"}
               </div>
 
               <div>
