@@ -93,11 +93,23 @@ export default async function BrandPage({
       return acc;
     }, {}) ?? {};
 
+  /* ================= ACTIONS ================= */
+
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
     const sb = await supabaseServer();
     await sb.from("brands").update({ note: value || null }).eq("id", id);
+  }
+
+  async function updateContactPerson(formData: FormData) {
+    "use server";
+    const value = formData.get("value") as string | null;
+    const sb = await supabaseServer();
+    await sb
+      .from("brands")
+      .update({ contact_person: value || null })
+      .eq("id", id);
   }
 
   async function disableBrand() {
@@ -145,7 +157,6 @@ export default async function BrandPage({
           )}
         </div>
 
-        {/* 2 KOLONE */}
         <div className="grid gap-6 md:grid-cols-2 text-sm">
           <div className="space-y-3">
             <div>
@@ -173,12 +184,17 @@ export default async function BrandPage({
             </div>
             <div>
               <div className="text-zinc-500">Kontakt osoba</div>
-              <div>{brand.contact_person ?? "—"}</div>
+              <form action={updateContactPerson}>
+                <input
+                  name="value"
+                  defaultValue={brand.contact_person ?? ""}
+                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm"
+                />
+              </form>
             </div>
           </div>
         </div>
 
-        {/* NAPOMENA */}
         <div className="mt-6">
           <div className="mb-1 text-sm text-zinc-500">Napomena</div>
           <form action={updateBrandNote}>
@@ -218,6 +234,13 @@ export default async function BrandPage({
             )}
           </div>
         ))}
+
+        {/* ➕ DODAJ PRETPLATU */}
+        {u.role === "admin" && (
+          <div className="flex items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/20 p-4 text-sm text-zinc-400">
+            + Dodaj pretplatu
+          </div>
+        )}
       </div>
     </AppShell>
   );
