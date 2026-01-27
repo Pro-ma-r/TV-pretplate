@@ -40,6 +40,7 @@ export default async function BrandPage({
       email,
       contact_person,
       note,
+      visible_on_web,
       client_id,
       clients (
         id,
@@ -62,10 +63,10 @@ export default async function BrandPage({
     );
   }
 
-  // ✅ ISPRAVNO: clients je objekt (ne array) kod many-to-one relacije
+  // clients je objekt (many-to-one)
   const client = (brand as any).clients ?? null;
 
-  // PRETPLATE (bez join-a; mapiranje radi)
+  // PRETPLATE
   const { data: subscriptions } = await supabase
     .from("subscriptions")
     .select(
@@ -82,7 +83,9 @@ export default async function BrandPage({
     .order("start_date", { ascending: false });
 
   // SVI PAKETI
-  const { data: packages } = await supabase.from("packages").select("id, name");
+  const { data: packages } = await supabase
+    .from("packages")
+    .select("id, name");
 
   const packageMap =
     packages?.reduce<Record<string, string>>((acc, p) => {
@@ -99,11 +102,38 @@ export default async function BrandPage({
     await sb.from("brands").update({ note: value || null }).eq("id", id);
   }
 
+  // ✅ TOGGLE UKLJUČI / ISKLJUČI BRENDA
+  async function toggleBrandVisibility() {
+    "use server";
+
+    const sb = await supabaseServer();
+    await sb
+      .from("brands")
+      .update({ visible_on_web: !brand.visible_on_web })
+      .eq("id", id);
+  }
+
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <h2 className="mb-3 text-lg font-semibold">Profil brenda</h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Profil brenda</h2>
+
+          {/* GUMB UKLJUČI / ISKLJUČI – NIVOU BRENDA */}
+          <form action={toggleBrandVisibility}>
+            <button
+              type="submit"
+              className={`rounded-lg px-3 py-1 text-sm ${
+                brand.visible_on_web
+                  ? "bg-red-600/20 text-red-400 border border-red-600/40"
+                  : "bg-green-600/20 text-green-400 border border-green-600/40"
+              }`}
+            >
+              {brand.visible_on_web ? "Isključi brend" : "Uključi brend"}
+            </button>
+          </form>
+        </div>
 
         <div className="grid gap-3 text-sm text-zinc-300">
           <div>
