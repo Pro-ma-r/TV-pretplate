@@ -1,7 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
+import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
 
@@ -27,7 +27,8 @@ export default async function BrandPage({
 }) {
   const { id } = await params;
 
-  const supabase = supabaseReadonly();
+  // ⬅️ OVO JE KLJUČNO
+  const supabase = await supabaseServer();
 
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
