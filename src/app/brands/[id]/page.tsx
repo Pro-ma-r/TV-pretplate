@@ -76,11 +76,14 @@ export default async function BrandPage({
     .eq("brand_id", brand.id)
     .order("start_date", { ascending: false });
 
+  // 🔧 INLINE UPDATE – ISPRAVNO ZA NEXT 15
   async function updateBrandField(
     field: "contact_person" | "note",
-    value: string
+    formData: FormData
   ) {
     "use server";
+    const value = formData.get("value") as string | null;
+
     const sb = await supabaseServer();
     await sb
       .from("brands")
@@ -88,39 +91,13 @@ export default async function BrandPage({
       .eq("id", id);
   }
 
-  async function toggleBrand(disable: boolean) {
-    "use server";
-    const sb = await supabaseServer();
-    await sb.rpc(
-      disable
-        ? "disable_subscription"
-        : "enable_subscription",
-      {
-        p_subscription_id: brand.id
-      }
-    );
-  }
-
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">
-            Profil brenda
-          </h2>
-
-          <form action={toggleBrand.bind(null, !brand.manually_disabled)}>
-            <button
-              type="submit"
-              className="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
-            >
-              {brand.manually_disabled
-                ? "Uključi brend"
-                : "Isključi brend"}
-            </button>
-          </form>
-        </div>
+        <h2 className="mb-3 text-lg font-semibold">
+          Profil brenda
+        </h2>
 
         <div className="grid gap-3 text-sm text-zinc-300">
           <div>
@@ -171,7 +148,7 @@ export default async function BrandPage({
         </div>
       </div>
 
-      {/* PRETPLATE */}
+      {/* PRETPLATE – KARTICE */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">
           Pretplate ({subscriptions?.length ?? 0})
