@@ -13,8 +13,10 @@ function formatDate(d?: string | null) {
 export default async function BrandPage({
   params
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
+  const { id } = await params; // ⬅️ OVO JE KLJUČNO
+
   const supabase = supabaseReadonly();
 
   const u = await requireUser(supabase);
@@ -24,7 +26,7 @@ export default async function BrandPage({
   const { data: brand } = await supabase
     .from("brands")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (!brand) {
@@ -40,22 +42,22 @@ export default async function BrandPage({
     .from("subscriptions")
     .select(
       `
-      id,
-      start_date,
-      end_date,
-      payment_date,
-      manually_disabled,
-      disabled_note,
-      note,
-      packages(name)
-    `
+        id,
+        start_date,
+        end_date,
+        payment_date,
+        manually_disabled,
+        disabled_note,
+        note,
+        packages(name)
+      `
     )
     .eq("brand_id", brand.id)
     .order("start_date", { ascending: false });
 
   return (
     <AppShell title={brand.name} role={u.role}>
-      {/* OSNOVNI PODACI */}
+      {/* PODACI O BRENDu */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
         <h2 className="mb-2 text-lg font-semibold">Podaci o brendu</h2>
 
@@ -75,7 +77,7 @@ export default async function BrandPage({
         </div>
       </div>
 
-      {/* PRETPLATE — KARTICE */}
+      {/* PRETPLATE – KARTICE */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">
           Pretplate ({subscriptions?.length ?? 0})
