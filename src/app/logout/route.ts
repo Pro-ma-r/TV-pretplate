@@ -4,10 +4,11 @@ import { supabaseServer } from "@/src/lib/supabaseServer";
 export async function POST(request: Request) {
   const supabase = await supabaseServer();
 
-  // Supabase SSR client sam briše sve auth cookieje
   await supabase.auth.signOut();
 
+  // ⬇️ KLJUČ: 303 umjesto default 307
   return NextResponse.redirect(
-    new URL("/login", request.url)
+    new URL("/login", request.url),
+    { status: 303 }
   );
 }
