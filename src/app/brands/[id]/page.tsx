@@ -10,19 +10,29 @@ function formatDate(d?: string | null) {
   return new Date(d).toLocaleDateString("hr-HR");
 }
 
+function deriveStatus(s: {
+  manually_disabled: boolean | null;
+  end_date: string | null;
+}) {
+  if (s.manually_disabled) return "Isključena";
+  if (s.end_date && new Date(s.end_date) < new Date())
+    return "Neaktivna";
+  return "Aktivna";
+}
+
 export default async function BrandPage({
   params
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const { id } = await params; // ⬅️ OVO JE KLJUČNO
+  const { id } = await params;
 
   const supabase = supabaseReadonly();
 
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
-  // 1️⃣ BRAND
+  // BRAND
   const { data: brand } = await supabase
     .from("brands")
     .select("*")
@@ -32,12 +42,14 @@ export default async function BrandPage({
   if (!brand) {
     return (
       <AppShell title="Brend" role={u.role}>
-        <div>Brend ne postoji.</div>
+        <div className="text-sm text-zinc-400">
+          Brend ne postoji.
+        </div>
       </AppShell>
     );
   }
 
-  // 2️⃣ PRETPLATE TOG BRENDA
+  // PRETPLATE TOG BRENDA
   const { data: subscriptions } = await supabase
     .from("subscriptions")
     .select(
@@ -49,7 +61,7 @@ export default async function BrandPage({
         manually_disabled,
         disabled_note,
         note,
-        packages(name)
+        packages ( name )
       `
     )
     .eq("brand_id", brand.id)
@@ -59,7 +71,9 @@ export default async function BrandPage({
     <AppShell title={brand.name} role={u.role}>
       {/* PODACI O BRENDu */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <h2 className="mb-2 text-lg font-semibold">Podaci o brendu</h2>
+        <h2 className="mb-2 text-lg font-semibold">
+          Podaci o brendu
+        </h2>
 
         <div className="grid gap-2 text-sm text-zinc-300">
           <div>
@@ -67,7 +81,9 @@ export default async function BrandPage({
             {brand.email ?? "—"}
           </div>
           <div>
-            <span className="text-zinc-500">Kontakt:</span>{" "}
+            <span className="text-zinc-500">
+              Kontakt osoba:
+            </span>{" "}
             {brand.contact_person ?? "—"}
           </div>
           <div>
@@ -88,10 +104,10 @@ export default async function BrandPage({
             key={s.id}
             className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4"
           >
-            <div className="flex flex-col gap-2 text-sm">
+            <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.packages?.name ?? "—"}
+                {s.packages?.[0]?.name ?? "—"}
               </div>
 
               <div>
@@ -102,18 +118,21 @@ export default async function BrandPage({
 
               <div>
                 <span className="text-zinc-500">Status:</span>{" "}
-                {s.manually_disabled
-                  ? "Isključena"
-                  : s.end_date &&
-                    new Date(s.end_date) < new Date()
-                  ? "Neaktivna"
-                  : "Aktivna"}
+                {deriveStatus(s)}
               </div>
 
               {s.note && (
                 <div>
-                  <span className="text-zinc-500">Napomena:</span>{" "}
+                  <span className="text-zinc-500">
+                    Napomena:
+                  </span>{" "}
                   {s.note}
+                </div>
+              )}
+
+              {s.disabled_note && (
+                <div className="text-red-400">
+                  {s.disabled_note}
                 </div>
               )}
             </div>
