@@ -127,9 +127,16 @@ export function SubscriptionsTable({
           <tbody className="text-zinc-200">
             {filteredRows.map((r) => (
               <tr key={r.id} className="border-b border-zinc-900">
+                {/* ✅ OVDJE JE JEDINA IZMJENA */}
                 <td className="py-2 pr-4 font-medium">
-                  {r.brand_name}
+                  <a
+                    href={`/brands/${r.brand_id}`}
+                    className="cursor-pointer text-zinc-200 hover:text-purple-400 transition-colors"
+                  >
+                    {r.brand_name}
+                  </a>
                 </td>
+
                 <td className="py-2 pr-4 text-zinc-400">
                   {r.client_email ?? "—"}
                 </td>
