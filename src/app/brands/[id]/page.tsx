@@ -63,7 +63,6 @@ export default async function BrandPage({
     );
   }
 
-  // clients je objekt (many-to-one)
   const client = (brand as any).clients ?? null;
 
   // PRETPLATE
@@ -82,7 +81,7 @@ export default async function BrandPage({
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
-  // SVI PAKETI
+  // PAKETI
   const { data: packages } = await supabase
     .from("packages")
     .select("id, name");
@@ -93,7 +92,7 @@ export default async function BrandPage({
       return acc;
     }, {}) ?? {};
 
-  // UPDATE NAPOMENE BRENDA
+  // UPDATE NAPOMENE
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
@@ -102,14 +101,16 @@ export default async function BrandPage({
     await sb.from("brands").update({ note: value || null }).eq("id", id);
   }
 
-  // ✅ TOGGLE UKLJUČI / ISKLJUČI BRENDA
-  async function toggleBrandVisibility() {
+  // ✅ TOGGLE VIDLJIVOSTI BRENDA (ISPRAVNO)
+  async function toggleBrandVisibility(formData: FormData) {
     "use server";
+
+    const current = formData.get("current") === "true";
 
     const sb = await supabaseServer();
     await sb
       .from("brands")
-      .update({ visible_on_web: !brand.visible_on_web })
+      .update({ visible_on_web: !current })
       .eq("id", id);
   }
 
@@ -122,6 +123,11 @@ export default async function BrandPage({
 
           {/* GUMB UKLJUČI / ISKLJUČI – NIVOU BRENDA */}
           <form action={toggleBrandVisibility}>
+            <input
+              type="hidden"
+              name="current"
+              value={brand.visible_on_web ? "true" : "false"}
+            />
             <button
               type="submit"
               className={`rounded-lg px-3 py-1 text-sm ${
