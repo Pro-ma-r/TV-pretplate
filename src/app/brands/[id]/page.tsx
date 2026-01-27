@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
-import { disableBrand, enableBrand } from "@/src/app/brands/actions";
 
 function formatDate(d?: string | null) {
   if (!d) return "—";
@@ -82,19 +81,13 @@ export default async function BrandPage({
     .order("start_date", { ascending: false });
 
   // PAKETI
-  const { data: packages } = await supabase
-    .from("packages")
-    .select("id, name");
+  const { data: packages } = await supabase.from("packages").select("id, name");
 
   const packageMap =
     packages?.reduce<Record<string, string>>((acc, p) => {
       acc[p.id] = p.name;
       return acc;
     }, {}) ?? {};
-
-  // JE LI BREND ISKLJUČEN (AKO IMA BAR JEDNU manually_disabled)
-  const brandIsDisabled =
-    subscriptions?.some((s) => s.manually_disabled) ?? false;
 
   // UPDATE NAPOMENE
   async function updateBrandNote(formData: FormData) {
@@ -105,6 +98,23 @@ export default async function BrandPage({
     await sb.from("brands").update({ note: value || null }).eq("id", id);
   }
 
+  // ✅ GUMB NA NIVOU BRENDA:
+  // - Isključi brend -> manually_disabled=true za SVE pretplate brenda
+  // - Uključi brend  -> manually_disabled=false za SVE pretplate brenda
+  async function setBrandDisabled(formData: FormData) {
+    "use server";
+
+    const disable = formData.get("disable") === "true";
+
+    const sb = await supabaseServer();
+    await sb
+      .from("subscriptions")
+      .update({ manually_disabled: disable })
+      .eq("brand_id", id);
+  }
+
+  const brandIsDisabled = subscriptions?.some((s) => s.manually_disabled) ?? false;
+
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
@@ -112,33 +122,20 @@ export default async function BrandPage({
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-lg font-semibold">Profil brenda</h2>
 
-          {/* ✅ GUMB UKLJUČI / ISKLJUČI – COPY PASTE LOGIKA */}
-          {brandIsDisabled ? (
-            <form action={enableBrand}>
-              <input type="hidden" name="brand_id" value={id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-sm text-green-400"
-              >
-                Uključi brend
-              </button>
-            </form>
-          ) : (
-            <form
-              action={async (fd) => {
-                "use server";
-                await disableBrand(fd);
-              }}
+          {/* ✅ GUMB UKLJUČI / ISKLJUČI – NIVOU BRENDA */}
+          <form action={setBrandDisabled}>
+            <input type="hidden" name="disable" value={brandIsDisabled ? "false" : "true"} />
+            <button
+              type="submit"
+              className={`rounded-lg px-3 py-1 text-sm ${
+                brandIsDisabled
+                  ? "bg-green-600/20 text-green-400 border border-green-600/40"
+                  : "bg-red-600/20 text-red-400 border border-red-600/40"
+              }`}
             >
-              <input type="hidden" name="brand_id" value={id} />
-              <button
-                type="submit"
-                className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-sm text-red-400"
-              >
-                Isključi brend
-              </button>
-            </form>
-          )}
+              {brandIsDisabled ? "Uključi brend" : "Isključi brend"}
+            </button>
+          </form>
         </div>
 
         <div className="grid gap-3 text-sm text-zinc-300">
