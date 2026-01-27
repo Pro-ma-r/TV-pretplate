@@ -63,6 +63,8 @@ export default async function BrandPage({
     );
   }
 
+  const client = brand.clients?.[0] ?? null;
+
   // PRETPLATE
   const { data: subscriptions } = await supabase
     .from("subscriptions")
@@ -107,27 +109,27 @@ export default async function BrandPage({
         <div className="grid gap-3 text-sm text-zinc-300">
           <div>
             <span className="text-zinc-500">Klijent:</span>{" "}
-            {brand.clients?.name ?? "—"}
+            {client?.name ?? "—"}
           </div>
 
           <div>
             <span className="text-zinc-500">OIB:</span>{" "}
-            {brand.clients?.oib ?? "—"}
+            {client?.oib ?? "—"}
           </div>
 
           <div>
             <span className="text-zinc-500">Adresa:</span>{" "}
-            {brand.clients?.address ?? "—"}
+            {client?.address ?? "—"}
           </div>
 
           <div>
             <span className="text-zinc-500">Telefon:</span>{" "}
-            {brand.clients?.phone ?? "—"}
+            {client?.phone ?? "—"}
           </div>
 
           <div>
             <span className="text-zinc-500">Email:</span>{" "}
-            {brand.clients?.email ?? "—"}
+            {client?.email ?? "—"}
           </div>
 
           {/* KONTAKT OSOBA */}
