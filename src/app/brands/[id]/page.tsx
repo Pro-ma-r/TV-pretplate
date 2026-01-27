@@ -37,7 +37,10 @@ export default async function BrandPage({
     .from("brands")
     .select(
       `
-      *,
+      id,
+      name,
+      contact_person,
+      note,
       clients (
         name,
         email,
@@ -60,9 +63,6 @@ export default async function BrandPage({
     );
   }
 
-  const displayEmail =
-    brand.clients?.email ?? brand.email ?? "—";
-
   // PRETPLATE
   const { data: subscriptions } = await supabase
     .from("subscriptions")
@@ -73,10 +73,12 @@ export default async function BrandPage({
       end_date,
       manually_disabled,
       note,
-      packages ( name )
+      packages (
+        name
+      )
     `
     )
-    .eq("brand_id", brand.id)
+    .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
   // INLINE UPDATE
@@ -125,7 +127,7 @@ export default async function BrandPage({
 
           <div>
             <span className="text-zinc-500">Email:</span>{" "}
-            {displayEmail}
+            {brand.clients?.email ?? "—"}
           </div>
 
           {/* KONTAKT OSOBA */}
@@ -142,7 +144,6 @@ export default async function BrandPage({
               <input
                 name="value"
                 defaultValue={brand.contact_person ?? ""}
-                placeholder="Unesi kontakt osobu"
                 className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm"
               />
             </form>
@@ -157,7 +158,6 @@ export default async function BrandPage({
               <textarea
                 name="value"
                 defaultValue={brand.note ?? ""}
-                placeholder="Unesi napomenu..."
                 className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
                 rows={3}
               />
@@ -180,7 +180,7 @@ export default async function BrandPage({
             <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.packages?.[0]?.name ?? "—"}
+                {s.packages?.name ?? "—"}
               </div>
 
               <div>
