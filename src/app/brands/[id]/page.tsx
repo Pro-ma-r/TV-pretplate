@@ -22,11 +22,10 @@ export default async function BrandPage({
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
-  // BRAND + CLIENT (NE DIRAMO)
+  // BRAND + CLIENT
   const { data: brand } = await supabase
     .from("brands")
-    .select(
-      `
+    .select(`
       id,
       name,
       email,
@@ -38,8 +37,7 @@ export default async function BrandPage({
         address,
         phone
       )
-    `
-    )
+    `)
     .eq("id", id)
     .single();
 
@@ -55,23 +53,23 @@ export default async function BrandPage({
 
   const client = brand.clients?.[0] ?? null;
 
-  // ✅ PRETPLATE – ISPRAVAN IZVOR
+  // ✅ PRETPLATE: VIEW + JOIN NA PACKAGES
   const { data: subscriptions } = await supabase
     .from("subscriptions_with_status")
-    .select(
-      `
+    .select(`
       id,
-      package,
       start_date,
       end_date,
       status,
-      note
-    `
-    )
+      note,
+      packages (
+        name
+      )
+    `)
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
-  // UPDATE NAPOMENE BRENDA (NE DIRAMO)
+  // UPDATE NAPOMENE BRENDA
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
@@ -127,7 +125,7 @@ export default async function BrandPage({
             <div className="grid gap-2 text-sm text-zinc-300">
               <div>
                 <span className="text-zinc-500">Paket:</span>{" "}
-                {s.package ?? "—"}
+                {s.packages?.[0]?.name ?? "—"}
               </div>
 
               <div>
