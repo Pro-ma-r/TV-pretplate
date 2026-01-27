@@ -32,14 +32,13 @@ export default async function BrandPage({
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
-  // 1️⃣ BRAND + CLIENT
+  // BRAND + CLIENT
   const { data: brand } = await supabase
     .from("brands")
     .select(
       `
       *,
       clients (
-        id,
         name,
         email
       )
@@ -61,7 +60,7 @@ export default async function BrandPage({
   const displayEmail =
     brand.clients?.email ?? brand.email ?? "—";
 
-  // 2️⃣ PRETPLATE + PAKETI
+  // PRETPLATE
   const { data: subscriptions } = await supabase
     .from("subscriptions")
     .select(
@@ -69,28 +68,61 @@ export default async function BrandPage({
       id,
       start_date,
       end_date,
-      payment_date,
       manually_disabled,
-      disabled_note,
       note,
-      packages (
-        id,
-        name
-      )
+      packages ( name )
     `
     )
     .eq("brand_id", brand.id)
     .order("start_date", { ascending: false });
 
+  async function updateBrandField(
+    field: "contact_person" | "note",
+    value: string
+  ) {
+    "use server";
+    const sb = await supabaseServer();
+    await sb
+      .from("brands")
+      .update({ [field]: value || null })
+      .eq("id", id);
+  }
+
+  async function toggleBrand(disable: boolean) {
+    "use server";
+    const sb = await supabaseServer();
+    await sb.rpc(
+      disable
+        ? "disable_subscription"
+        : "enable_subscription",
+      {
+        p_subscription_id: brand.id
+      }
+    );
+  }
+
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL BRENDA */}
       <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
-        <h2 className="mb-3 text-lg font-semibold">
-          Profil brenda
-        </h2>
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-lg font-semibold">
+            Profil brenda
+          </h2>
 
-        <div className="grid gap-2 text-sm text-zinc-300">
+          <form action={toggleBrand.bind(null, !brand.manually_disabled)}>
+            <button
+              type="submit"
+              className="rounded-xl border border-zinc-700 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
+            >
+              {brand.manually_disabled
+                ? "Uključi brend"
+                : "Isključi brend"}
+            </button>
+          </form>
+        </div>
+
+        <div className="grid gap-3 text-sm text-zinc-300">
           <div>
             <span className="text-zinc-500">Klijent:</span>{" "}
             {brand.clients?.name ?? "—"}
@@ -101,21 +133,45 @@ export default async function BrandPage({
             {displayEmail}
           </div>
 
+          {/* KONTAKT OSOBA – INLINE */}
           <div>
             <span className="text-zinc-500">
               Kontakt osoba:
-            </span>{" "}
-            {brand.contact_person ?? "—"}
+            </span>
+            <form
+              action={updateBrandField.bind(
+                null,
+                "contact_person"
+              )}
+            >
+              <input
+                name="value"
+                defaultValue={brand.contact_person ?? ""}
+                placeholder="Unesi kontakt osobu"
+                className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1 text-sm"
+              />
+            </form>
           </div>
 
+          {/* NAPOMENA – INLINE */}
           <div>
-            <span className="text-zinc-500">Napomena:</span>{" "}
-            {brand.note ?? "—"}
+            <span className="text-zinc-500">Napomena:</span>
+            <form
+              action={updateBrandField.bind(null, "note")}
+            >
+              <textarea
+                name="value"
+                defaultValue={brand.note ?? ""}
+                placeholder="Unesi napomenu..."
+                className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+                rows={3}
+              />
+            </form>
           </div>
         </div>
       </div>
 
-      {/* PRETPLATE – KARTICE */}
+      {/* PRETPLATE */}
       <div className="space-y-3">
         <h2 className="text-lg font-semibold">
           Pretplate ({subscriptions?.length ?? 0})
@@ -151,21 +207,9 @@ export default async function BrandPage({
                   {s.note}
                 </div>
               )}
-
-              {s.disabled_note && (
-                <div className="text-red-400">
-                  {s.disabled_note}
-                </div>
-              )}
             </div>
           </div>
         ))}
-
-        {subscriptions?.length === 0 && (
-          <div className="text-sm text-zinc-400">
-            Brend nema pretplata.
-          </div>
-        )}
       </div>
     </AppShell>
   );
