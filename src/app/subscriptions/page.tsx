@@ -2,7 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { requireUser } from "@/src/lib/auth";
-import { supabaseReadonly } from "@/src/lib/supabaseReadonly";
+import { supabaseServer } from "@/src/lib/supabaseServer";
 import { AppShell } from "@/src/components/AppShell";
 import type { SubscriptionWithStatus } from "@/src/types/db";
 import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
@@ -14,7 +14,8 @@ type SubscriptionRow = SubscriptionWithStatus & {
 };
 
 export default async function SubscriptionsPage(props: any) {
-  const supabase = supabaseReadonly();
+  // ✅ OVO JE KLJUČ
+  const supabase = await supabaseServer();
 
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
@@ -29,13 +30,8 @@ export default async function SubscriptionsPage(props: any) {
     ? subsRes.data
     : [];
 
-  const brandsRes = await supabase
-    .from("brands")
-    .select("id,name");
-
-  const pkgsRes = await supabase
-    .from("packages")
-    .select("id,name");
+  const brandsRes = await supabase.from("brands").select("id,name");
+  const pkgsRes = await supabase.from("packages").select("id,name");
 
   const brandMap = new Map(
     (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
