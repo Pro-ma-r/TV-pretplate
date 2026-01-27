@@ -39,14 +39,14 @@ export default async function BrandPage({
       `
       id,
       name,
+      email,
+      contact_person,
       note,
       clients (
         name,
-        email,
         oib,
         address,
-        phone,
-        note
+        phone
       )
     `
     )
@@ -83,7 +83,7 @@ export default async function BrandPage({
     .eq("brand_id", id)
     .order("start_date", { ascending: false });
 
-  // INLINE UPDATE – NAPOMENA BRENDA
+  // UPDATE NAPOMENE BRENDA
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
@@ -126,14 +126,14 @@ export default async function BrandPage({
 
           <div>
             <span className="text-zinc-500">Email:</span>{" "}
-            {client?.email ?? "—"}
+            {brand.email ?? "—"}
           </div>
 
           <div>
             <span className="text-zinc-500">
               Kontakt osoba:
             </span>{" "}
-            {client?.note ?? "—"}
+            {brand.contact_person ?? "—"}
           </div>
 
           {/* NAPOMENA BRENDA */}
