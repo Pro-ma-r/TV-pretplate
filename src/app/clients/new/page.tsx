@@ -23,10 +23,10 @@ function isValidOIB(oib: string) {
 export default async function NewClientPage({
   searchParams
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     success?: string;
     error?: string;
-  };
+  }>;
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
@@ -35,8 +35,9 @@ export default async function NewClientPage({
     redirect("/login");
   }
 
-  const success = searchParams?.success;
-  const error = searchParams?.error;
+  const sp = await searchParams;
+  const success = sp?.success;
+  const error = sp?.error;
 
   async function createClientAndBrand(formData: FormData) {
     "use server";
