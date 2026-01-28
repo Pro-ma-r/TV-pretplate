@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
 
 export function AppShell({
   title,
@@ -9,8 +12,10 @@ export function AppShell({
   role: string;
   children: React.ReactNode;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
           {/* LEFT: LOGO + TITLE */}
@@ -18,21 +23,21 @@ export function AppShell({
             <img
               src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
               alt="Tvornica vjenčanja"
-              className="h-12 w-12 object-contain"
+              className="h-10 w-10 sm:h-12 sm:w-12 object-contain"
             />
 
             <div>
-              <div className="text-sm text-zinc-400">
+              <div className="text-xs sm:text-sm text-zinc-400">
                 Tvornica vjenčanja
               </div>
-              <div className="text-lg font-semibold">
+              <div className="text-base sm:text-lg font-semibold">
                 {title}
               </div>
             </div>
           </div>
 
-          {/* RIGHT: NAV */}
-          <nav className="flex items-center gap-4 text-sm">
+          {/* RIGHT: DESKTOP NAV */}
+          <nav className="hidden items-center gap-4 text-sm sm:flex">
             <Link
               className="text-zinc-300 hover:text-white transition"
               href="/dashboard"
@@ -54,11 +59,10 @@ export function AppShell({
               Izvještaji
             </Link>
 
-            <span className="ml-4 rounded-full border border-zinc-800 px-3 py-1 text-zinc-300">
+            <span className="ml-4 rounded-full border border-zinc-800 px-3 py-1 text-xs sm:text-sm text-zinc-300">
               {role.toUpperCase()}
             </span>
 
-            {/* ✅ ISPRAVAN LOGOUT */}
             <form action="/logout" method="POST">
               <button
                 type="submit"
@@ -68,10 +72,64 @@ export function AppShell({
               </button>
             </form>
           </nav>
+
+          {/* MOBILE MENU BUTTON */}
+          <button
+            onClick={() => setOpen(!open)}
+            className="rounded-md border border-zinc-800 px-2 py-1 text-xs text-zinc-300 sm:hidden"
+          >
+            ☰
+          </button>
         </div>
+
+        {/* MOBILE DROPDOWN */}
+        {open && (
+          <div className="border-t border-zinc-800 bg-zinc-950 sm:hidden">
+            <nav className="flex flex-col gap-2 px-4 py-3 text-sm">
+              <Link
+                href="/dashboard"
+                className="text-zinc-300 hover:text-white"
+                onClick={() => setOpen(false)}
+              >
+                Dashboard
+              </Link>
+
+              <Link
+                href="/subscriptions"
+                className="text-zinc-300 hover:text-white"
+                onClick={() => setOpen(false)}
+              >
+                Pretplate
+              </Link>
+
+              <Link
+                href="/reports"
+                className="text-zinc-300 hover:text-white"
+                onClick={() => setOpen(false)}
+              >
+                Izvještaji
+              </Link>
+
+              <div className="mt-2 flex items-center justify-between border-t border-zinc-800 pt-3">
+                <span className="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-300">
+                  {role.toUpperCase()}
+                </span>
+
+                <form action="/logout" method="POST">
+                  <button
+                    type="submit"
+                    className="text-zinc-300 hover:text-white transition"
+                  >
+                    Logout
+                  </button>
+                </form>
+              </div>
+            </nav>
+          </div>
+        )}
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6">
+      <main className="mx-auto max-w-6xl px-4 py-4 sm:py-6">
         {children}
       </main>
     </div>
