@@ -39,13 +39,31 @@ export default async function NewSubscriptionPage({
   if (renew) {
     const { data } = await supabase
       .from("subscriptions")
-      .select("package_id, end_date")
+      .select(
+        `
+        package_id,
+        end_date,
+        packages (
+          duration_days
+        )
+      `
+      )
       .eq("id", renew)
       .single();
+
+    const durationDays =
+      data && "packages" in data && data.packages
+        ? (data.packages as any).duration_days
+        : null;
 
     if (data?.end_date) {
       const start = addDays(new Date(data.end_date), 1);
       defaultStart = toInputDate(start);
+
+      if (durationDays) {
+        defaultEnd = toInputDate(addDays(start, durationDays));
+      }
+
       defaultPackage = data.package_id ?? "";
     }
   }
@@ -54,6 +72,10 @@ export default async function NewSubscriptionPage({
     "use server";
 
     const sb = await supabaseServer();
+    const user = await requireUser(sb);
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized");
+    }
 
     const package_id = formData.get("package_id") as string;
     const start_date = formData.get("start_date") as string;
@@ -72,7 +94,7 @@ export default async function NewSubscriptionPage({
     });
 
     if (error) {
-      throw new Error(error.message);
+      throw error;
     }
 
     redirect(`/brands/${brandId}`);
@@ -119,6 +141,7 @@ export default async function NewSubscriptionPage({
             <input
               type="date"
               name="end_date"
+              defaultValue={defaultEnd || undefined}
               required
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
             />
