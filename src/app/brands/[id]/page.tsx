@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
+import Link from "next/link";
 
 import {
   disableSubscription,
@@ -93,8 +94,6 @@ export default async function BrandPage({
       return acc;
     }, {}) ?? {};
 
-  /* ================= ACTIONS ================= */
-
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
@@ -137,27 +136,27 @@ export default async function BrandPage({
 
   return (
     <AppShell title={brand.name} role={u.role}>
-      {/* PROFIL BRENDA */}
-      <div className="mb-8 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Profil brenda</h2>
+      {/* PROFIL */}
+      <div className="mb-6 rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 sm:p-5">
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <h2 className="text-base sm:text-lg font-semibold">Profil brenda</h2>
 
           {brandIsDisabled ? (
             <form action={enableBrand}>
-              <button className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-sm text-green-400">
+              <button className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-xs sm:text-sm text-green-400">
                 Uključi brend
               </button>
             </form>
           ) : (
             <form action={disableBrand}>
-              <button className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-sm text-red-400">
+              <button className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-xs sm:text-sm text-red-400">
                 Isključi brend
               </button>
             </form>
           )}
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 text-sm">
+        <div className="grid gap-5 md:grid-cols-2 text-xs sm:text-sm">
           <div className="space-y-3">
             <div>
               <div className="text-zinc-500">Klijent</div>
@@ -188,38 +187,40 @@ export default async function BrandPage({
                 <input
                   name="value"
                   defaultValue={brand.contact_person ?? ""}
-                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-sm"
+                  className="mt-1 w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-1.5 text-xs sm:text-sm"
                 />
               </form>
             </div>
           </div>
         </div>
 
-        <div className="mt-6">
-          <div className="mb-1 text-sm text-zinc-500">Napomena</div>
+        <div className="mt-5">
+          <div className="mb-1 text-xs sm:text-sm text-zinc-500">
+            Napomena
+          </div>
           <form action={updateBrandNote}>
             <textarea
               name="value"
               defaultValue={brand.note ?? ""}
               rows={4}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs sm:text-sm"
             />
           </form>
         </div>
       </div>
 
       {/* PRETPLATE */}
-      <h2 className="mb-3 text-lg font-semibold">
+      <h2 className="mb-3 text-base sm:text-lg font-semibold">
         Pretplate ({subscriptions?.length ?? 0})
       </h2>
 
-      <div className="grid gap-4 md:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {subscriptions?.map((s) => (
           <div
             key={s.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-sm"
+            className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs sm:text-sm"
           >
-            <div className="mb-2 font-medium">
+            <div className="mb-1 font-medium">
               {packageMap[s.package_id] ?? "—"}
             </div>
 
@@ -229,18 +230,21 @@ export default async function BrandPage({
 
             <div className="mt-1">{deriveStatus(s)}</div>
 
-            {s.note && (
-              <div className="mt-2 text-zinc-400">{s.note}</div>
-            )}
+            <Link
+              href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
+              className="mt-3 inline-block text-xs text-green-400 hover:underline"
+            >
+              Produži
+            </Link>
           </div>
         ))}
 
-        {/* ➕ DODAJ PRETPLATU */}
-        {u.role === "admin" && (
-          <div className="flex items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/20 p-4 text-sm text-zinc-400">
-            + Dodaj pretplatu
-          </div>
-        )}
+        <Link
+          href={`/subscriptions/new?brand=${id}`}
+          className="flex items-center justify-center rounded-2xl border border-dashed border-zinc-700 bg-zinc-900/20 p-4 text-xs sm:text-sm text-zinc-400 hover:bg-zinc-900/40"
+        >
+          + Nova pretplata
+        </Link>
       </div>
     </AppShell>
   );
