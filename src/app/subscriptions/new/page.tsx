@@ -53,7 +53,7 @@ export default async function NewSubscriptionPage({
     const end_date = formData.get("end_date") as string;
 
     if (!package_id || !start_date || !end_date) {
-      return { ok: false };
+      redirect(`/subscriptions/new?brand=${brandId}`);
     }
 
     const { error } = await sb.from("subscriptions").insert({
@@ -66,16 +66,15 @@ export default async function NewSubscriptionPage({
 
     if (error) {
       console.error("INSERT ERROR:", error);
-      return { ok: false };
+      redirect(`/subscriptions/new?brand=${brandId}`);
     }
 
-    return { ok: true };
+    redirect(`/brands/${brandId}`);
   }
 
   return (
     <AppShell title="Nova pretplata" role={u.role}>
       <NewSubscriptionForm
-        brandId={brandId}
         packages={packages ?? []}
         renewData={renewData}
         action={createSubscription}
