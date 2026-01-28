@@ -21,24 +21,19 @@ export default async function NewSubscriptionPage({
   searchParams: Promise<{
     brand?: string;
     renew?: string;
+    error?: string;
   }>;
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
   if (!u || u.role !== "admin") redirect("/login");
 
-  const { brand: brandId, renew } = await searchParams;
+  const { brand: brandId, renew, error } = await searchParams;
   if (!brandId) redirect("/brands");
 
-  // =========================
-  // DEFAULT DATUMI (RENEW)
-  // =========================
   let defaultStart: string | null = null;
   let defaultEnd: string | null = null;
 
-  // =========================
-  // PAKETI
-  // =========================
   const { data: packages } = await supabase
     .from("packages")
     .select("id, name, duration_days")
@@ -67,9 +62,6 @@ export default async function NewSubscriptionPage({
     }
   }
 
-  // =========================
-  // CREATE
-  // =========================
   async function createSubscription(formData: FormData) {
     "use server";
 
@@ -89,7 +81,7 @@ export default async function NewSubscriptionPage({
 
     if (error) {
       console.error("SUBSCRIPTION INSERT ERROR:", error);
-      throw error;
+      redirect(`/subscriptions/new?brand=${brandId}&error=1`);
     }
 
     redirect(`/brands/${brandId}`);
@@ -102,8 +94,13 @@ export default async function NewSubscriptionPage({
           {renew ? "Produženje pretplate" : "Nova pretplata"}
         </h2>
 
+        {error && (
+          <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/10 px-4 py-2 text-sm text-red-400">
+            Došlo je do greške pri spremanju pretplate.
+          </div>
+        )}
+
         <form action={createSubscription} className="space-y-4 text-sm">
-          {/* PAKET */}
           <div>
             <div className="mb-1 text-zinc-500">Paket</div>
             <select
@@ -120,7 +117,6 @@ export default async function NewSubscriptionPage({
             </select>
           </div>
 
-          {/* DATUM OD */}
           <div>
             <div className="mb-1 text-zinc-500">Datum OD</div>
             <input
@@ -132,7 +128,6 @@ export default async function NewSubscriptionPage({
             />
           </div>
 
-          {/* DATUM DO */}
           <div>
             <div className="mb-1 text-zinc-500">Datum DO</div>
             <input
