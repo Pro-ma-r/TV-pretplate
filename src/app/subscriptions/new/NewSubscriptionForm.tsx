@@ -1,78 +1,91 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 
-type Pkg = {
-  id: string;
-  name: string;
-  duration_days: number | null;
-};
-
-function addDaysStr(startYYYYMMDD: string, days: number) {
-  // startYYYYMMDD je "YYYY-MM-DD"
-  const d = new Date(startYYYYMMDD);
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
   d.setDate(d.getDate() + days);
+  return d;
+}
+
+function toInputDate(d: Date) {
   return d.toISOString().split("T")[0];
 }
 
-export function NewSubscriptionForm({
-  action,
+export default function NewSubscriptionForm({
   brandId,
-  renewId,
   packages,
-  defaultPackageId,
-  defaultStart,
-  defaultEnd,
-  showError
+  renewData,
+  action
 }: {
-  action: (formData: FormData) => void;
   brandId: string;
-  renewId: string | null;
-  packages: Pkg[];
-  defaultPackageId: string | null;
-  defaultStart: string | null;
-  defaultEnd: string | null;
-  showError: boolean;
+  packages: Array<{
+    id: string;
+    name: string;
+    duration_days: number | null;
+  }>;
+  renewData: {
+    package_id: string;
+    end_date: string;
+  } | null;
+  action: (fd: FormData) => Promise<{ ok: boolean }>;
 }) {
-  const pkgMap = useMemo(() => {
-    const m = new Map<string, Pkg>();
-    for (const p of packages) m.set(p.id, p);
-    return m;
-  }, [packages]);
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
 
-  const [packageId, setPackageId] = useState<string>(defaultPackageId ?? "");
-  const [startDate, setStartDate] = useState<string>(defaultStart ?? "");
-  const [endDate, setEndDate] = useState<string>(defaultEnd ?? "");
+  const [packageId, setPackageId] = useState(
+    renewData?.package_id ?? ""
+  );
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-  // AUTO-DO: kad god se promijeni paket ili Datum OD, end se izračuna (ako imamo duration_days)
+  const selectedPackage = useMemo(
+    () => packages.find((p) => p.id === packageId),
+    [packages, packageId]
+  );
+
+  // default start date kod produženja = dan nakon isteka
   useEffect(() => {
-    if (!packageId || !startDate) return;
+    if (renewData?.end_date) {
+      const prevEnd = new Date(renewData.end_date);
+      const start = addDays(prevEnd, 1);
+      setStartDate(toInputDate(start));
+    }
+  }, [renewData]);
 
-    const pkg = pkgMap.get(packageId);
-    const dd = pkg?.duration_days ?? null;
-    if (!dd) return;
-
-    const computed = addDaysStr(startDate, dd);
-    setEndDate(computed);
-  }, [packageId, startDate, pkgMap]);
+  // AUTO DO
+  useEffect(() => {
+    if (
+      startDate &&
+      selectedPackage?.duration_days
+    ) {
+      const start = new Date(startDate);
+      const end = addDays(
+        start,
+        selectedPackage.duration_days
+      );
+      setEndDate(toInputDate(end));
+    }
+  }, [startDate, selectedPackage]);
 
   return (
     <div className="mx-auto max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
       <h2 className="mb-4 text-lg font-semibold">
-        {renewId ? "Produženje pretplate" : "Nova pretplata"}
+        {renewData ? "Produženje pretplate" : "Nova pretplata"}
       </h2>
 
-      {showError && (
-        <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/10 px-4 py-2 text-sm text-red-400">
-          Došlo je do greške pri spremanju pretplate.
-        </div>
-      )}
-
-      <form action={action} className="space-y-4 text-sm">
-        {/* (brandId je već u server action closureu, ali ostavljam i hidden radi debug-a / eventualne refaktorizacije) */}
-        <input type="hidden" name="brand_id" value={brandId} />
-        {renewId ? <input type="hidden" name="renew" value={renewId} /> : null}
-
+      <form
+        action={(fd) => {
+          startTransition(async () => {
+            const res = await action(fd);
+            if (res.ok) {
+              router.push(`/brands/${brandId}`);
+            }
+          });
+        }}
+        className="space-y-4 text-sm"
+      >
         {/* PAKET */}
         <div>
           <div className="mb-1 text-zinc-500">Paket</div>
@@ -90,10 +103,6 @@ export function NewSubscriptionForm({
               </option>
             ))}
           </select>
-
-          <div className="mt-1 text-[11px] text-zinc-500">
-            DO se automatski računa po trajanju paketa, ali ga možeš ručno promijeniti.
-          </div>
         </div>
 
         {/* DATUM OD */}
@@ -109,7 +118,7 @@ export function NewSubscriptionForm({
           />
         </div>
 
-        {/* DATUM DO (editable, ali auto-popunjeno) */}
+        {/* DATUM DO */}
         <div>
           <div className="mb-1 text-zinc-500">Datum DO</div>
           <input
@@ -124,9 +133,10 @@ export function NewSubscriptionForm({
 
         <button
           type="submit"
-          className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600"
+          disabled={isPending}
+          className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-60"
         >
-          Spremi pretplatu
+          {isPending ? "Spremanje..." : "Spremi pretplatu"}
         </button>
       </form>
     </div>
