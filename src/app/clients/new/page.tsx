@@ -23,21 +23,18 @@ function isValidOIB(oib: string) {
 export default async function NewClientPage({
   searchParams
 }: {
-  searchParams?: Promise<{
+  searchParams?: {
     success?: string;
     error?: string;
-  }>;
+  };
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
 
-  if (!u || u.role !== "admin") {
-    redirect("/login");
-  }
+  if (!u || u.role !== "admin") redirect("/login");
 
-  const sp = await searchParams;
-  const success = sp?.success;
-  const error = sp?.error;
+  const success = searchParams?.success;
+  const error = searchParams?.error;
 
   async function createClientAndBrand(formData: FormData) {
     "use server";
@@ -46,20 +43,18 @@ export default async function NewClientPage({
 
     const client_name = formData.get("client_name") as string;
     const brand_name = formData.get("brand_name") as string;
-    const oibRaw = formData.get("oib") as string;
-    const oib = oibRaw?.trim();
+    const oib = (formData.get("oib") as string)?.trim();
     const address = formData.get("address") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const contact_person = formData.get("contact_person") as string;
     const note = formData.get("note") as string;
 
-    // ⛔ OIB VALIDACIJA
     if (oib && !isValidOIB(oib)) {
       redirect("/clients/new?error=oib");
     }
 
-    // 1️⃣ KLIJENT
+    // 1️⃣ INSERT CLIENT
     const { data: client, error: clientError } = await sb
       .from("clients")
       .insert({
@@ -73,10 +68,11 @@ export default async function NewClientPage({
       .single();
 
     if (clientError || !client) {
+      console.error("CLIENT INSERT ERROR:", clientError);
       redirect("/clients/new?error=db");
     }
 
-    // 2️⃣ BREND
+    // 2️⃣ INSERT BRAND
     const { data: brand, error: brandError } = await sb
       .from("brands")
       .insert({
@@ -90,6 +86,7 @@ export default async function NewClientPage({
       .single();
 
     if (brandError || !brand) {
+      console.error("BRAND INSERT ERROR:", brandError);
       redirect("/clients/new?error=db");
     }
 
@@ -104,7 +101,6 @@ export default async function NewClientPage({
           Dodavanje klijenta i brenda
         </h2>
 
-        {/* FEEDBACK */}
         {success && (
           <div className="mb-4 rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-2 text-sm text-green-400">
             Klijent i brend su uspješno kreirani.
@@ -120,83 +116,24 @@ export default async function NewClientPage({
         {error === "db" && (
           <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-2 text-sm text-red-400">
             Došlo je do greške pri spremanju podataka.
+            <br />
+            <span className="text-xs text-zinc-400">
+              Provjeri server log.
+            </span>
           </div>
         )}
 
         <form action={createClientAndBrand} className="space-y-4 text-sm">
-          <div>
-            <div className="mb-1 text-zinc-500">Klijent</div>
-            <input
-              name="client_name"
-              required
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
+          <input name="client_name" required placeholder="Klijent" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="brand_name" required placeholder="Brend" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="oib" placeholder="OIB (11 znamenki)" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="address" placeholder="Adresa" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input type="email" name="email" placeholder="Email" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="phone" placeholder="Telefon" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="contact_person" placeholder="Kontakt osoba" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <textarea name="note" rows={3} placeholder="Napomena" className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
 
-          <div>
-            <div className="mb-1 text-zinc-500">Brend</div>
-            <input
-              name="brand_name"
-              required
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">OIB</div>
-            <input
-              name="oib"
-              placeholder="11 znamenki"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">Adresa</div>
-            <input
-              name="address"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">Mail adresa</div>
-            <input
-              type="email"
-              name="email"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">Broj telefona</div>
-            <input
-              name="phone"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">Kontakt osoba</div>
-            <input
-              name="contact_person"
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <div>
-            <div className="mb-1 text-zinc-500">Napomena</div>
-            <textarea
-              name="note"
-              rows={3}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-            />
-          </div>
-
-          <button
-            type="submit"
-            className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600"
-          >
+          <button className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600">
             Spremi
           </button>
         </form>
