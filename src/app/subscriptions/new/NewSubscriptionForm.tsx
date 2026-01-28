@@ -45,7 +45,6 @@ export default function NewSubscriptionForm({
     [packages, packageId]
   );
 
-  // default start date kod produženja = dan nakon isteka
   useEffect(() => {
     if (renewData?.end_date) {
       const prevEnd = new Date(renewData.end_date);
@@ -54,15 +53,10 @@ export default function NewSubscriptionForm({
     }
   }, [renewData]);
 
-  // AUTO DO
   useEffect(() => {
-    if (
-      startDate &&
-      selectedPackage?.duration_days
-    ) {
-      const start = new Date(startDate);
+    if (startDate && selectedPackage?.duration_days) {
       const end = addDays(
-        start,
+        new Date(startDate),
         selectedPackage.duration_days
       );
       setEndDate(toInputDate(end));
@@ -75,18 +69,7 @@ export default function NewSubscriptionForm({
         {renewData ? "Produženje pretplate" : "Nova pretplata"}
       </h2>
 
-      <form
-        action={(fd) => {
-          startTransition(async () => {
-            const res = await action(fd);
-            if (res.ok) {
-              router.push(`/brands/${brandId}`);
-            }
-          });
-        }}
-        className="space-y-4 text-sm"
-      >
-        {/* PAKET */}
+      <form className="space-y-4 text-sm">
         <div>
           <div className="mb-1 text-zinc-500">Paket</div>
           <select
@@ -105,7 +88,6 @@ export default function NewSubscriptionForm({
           </select>
         </div>
 
-        {/* DATUM OD */}
         <div>
           <div className="mb-1 text-zinc-500">Datum OD</div>
           <input
@@ -118,7 +100,6 @@ export default function NewSubscriptionForm({
           />
         </div>
 
-        {/* DATUM DO */}
         <div>
           <div className="mb-1 text-zinc-500">Datum DO</div>
           <input
@@ -133,6 +114,14 @@ export default function NewSubscriptionForm({
 
         <button
           type="submit"
+          formAction={async (fd) => {
+            startTransition(async () => {
+              const res = await action(fd);
+              if (res.ok) {
+                router.push(`/brands/${brandId}`);
+              }
+            });
+          }}
           disabled={isPending}
           className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-60"
         >
