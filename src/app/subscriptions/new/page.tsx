@@ -53,7 +53,7 @@ export default async function NewSubscriptionPage({
       .eq("id", renew)
       .single();
 
-    const durationDays = data?.packages?.[0]?.duration_days;
+    const durationDays = data?.packages?.duration_days;
 
     if (data?.end_date && durationDays) {
       const prevEnd = new Date(data.end_date);
@@ -75,7 +75,7 @@ export default async function NewSubscriptionPage({
     .order("name");
 
   // =========================
-  // CREATE
+  // CREATE (SERVER-SIDE ISTINA)
   // =========================
   async function createSubscription(formData: FormData) {
     "use server";
@@ -83,14 +83,30 @@ export default async function NewSubscriptionPage({
     const sb = await supabaseServer();
 
     const package_id = formData.get("package_id") as string;
-    const start_date = formData.get("start_date") as string;
-    const end_date = formData.get("end_date") as string;
+    const start_date_raw = formData.get("start_date") as string;
+
+    if (!package_id || !start_date_raw) {
+      redirect(`/subscriptions/new?brand=${brandId}`);
+    }
+
+    const { data: pkg } = await sb
+      .from("packages")
+      .select("duration_days")
+      .eq("id", package_id)
+      .single();
+
+    if (!pkg?.duration_days) {
+      redirect(`/subscriptions/new?brand=${brandId}`);
+    }
+
+    const start = new Date(start_date_raw);
+    const end = addDays(start, pkg.duration_days);
 
     await sb.from("subscriptions").insert({
       brand_id: brandId,
       package_id,
-      start_date,
-      end_date,
+      start_date: toInputDate(start),
+      end_date: toInputDate(end),
       manually_disabled: false
     });
 
@@ -150,15 +166,14 @@ export default async function NewSubscriptionPage({
             />
           </div>
 
-          {/* DATUM DO */}
+          {/* DATUM DO (READ-ONLY, INFORMACIJA) */}
           <div>
             <div className="mb-1 text-zinc-500">Datum DO</div>
             <input
               type="date"
-              name="end_date"
-              required
-              defaultValue={defaultEnd ?? undefined}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+              value={defaultEnd ?? ""}
+              disabled
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-zinc-400"
             />
           </div>
 
