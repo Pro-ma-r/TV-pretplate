@@ -26,6 +26,7 @@ export default async function ReportsPage({
   const dana = Number(sp?.dana ?? 10);
 
   let rows: {
+    brand_id: string;
     brand_name: string;
     package_name: string;
     start_date: string;
@@ -51,6 +52,7 @@ export default async function ReportsPage({
         end_date,
         packages ( name ),
         brands (
+          id,
           name,
           email,
           clients ( email )
@@ -78,6 +80,7 @@ export default async function ReportsPage({
           return end >= today && end <= target;
         })
         .map((s: any) => ({
+          brand_id: s.brands.id,
           brand_name: s.brands.name,
           package_name: s.packages.name,
           start_date: s.start_date,
