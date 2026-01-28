@@ -23,71 +23,61 @@ export default async function ReportsPage({
 
   const paket = sp?.paket ?? "CONTENT";
   const istek = sp?.istek ?? "FUTURE";
-  const dana = Number(sp?.dana ?? 10);
+  const dana = Number(sp?.dana ?? 5);
 
-  let rows: {
-    brand_id: string;
-    brand_name: string;
-    package_name: string;
-    start_date: string;
-    end_date: string;
-    email: string | null;
-  }[] = [];
+  const today = new Date();
+  const pastFrom = new Date(today);
+  pastFrom.setDate(today.getDate() - dana);
 
-  if (sp) {
-    const today = new Date();
-    const target = new Date();
+  const futureTo = new Date(today);
+  futureTo.setDate(today.getDate() + dana);
 
-    if (istek === "PAST") {
-      target.setDate(today.getDate() - dana);
-    } else {
-      target.setDate(today.getDate() + dana);
-    }
-
-    const { data } = await supabase
-      .from("subscriptions")
-      .select(
-        `
-        start_date,
-        end_date,
-        packages ( name ),
-        brands (
-          id,
-          name,
-          email,
-          clients ( email )
-        )
+  const { data } = await supabase
+    .from("subscriptions")
+    .select(
       `
-      );
+      start_date,
+      end_date,
+      packages ( name ),
+      brands (
+        id,
+        name,
+        email,
+        clients ( email )
+      )
+    `
+    );
 
-    rows =
-      data
-        ?.filter((s: any) => {
-          const end = new Date(s.end_date);
+  const rows =
+    data
+      ?.filter((s: any) => {
+        const end = new Date(s.end_date);
 
-          const isContent =
-            s.packages?.name
-              ?.toLowerCase()
-              .includes("pristup sadržaju") ?? false;
+        const isContent =
+          s.packages?.name
+            ?.toLowerCase()
+            .includes("pristup sadržaju") ?? false;
 
-          if (paket === "CONTENT" && !isContent) return false;
-          if (paket === "OTHER" && isContent) return false;
+        // filter po paketu
+        if (paket === "CONTENT" && !isContent) return false;
+        if (paket === "OTHER" && isContent) return false;
 
-          if (istek === "PAST") {
-            return end < target;
-          }
+        // filter po isteku
+        if (istek === "PAST") {
+          return end >= pastFrom && end < today;
+        }
 
-          return end >= today && end <= target;
-        })
-        .map((s: any) => ({
-          brand_id: s.brands.id,
-          brand_name: s.brands.name,
-          package_name: s.packages.name,
-          start_date: s.start_date,
-          end_date: s.end_date,
-          email: s.brands.email ?? s.brands.clients?.email ?? null
-        })) ?? [];
-  }
+        // FUTURE
+        return end >= today && end <= futureTo;
+      })
+      .map((s: any) => ({
+        brand_id: s.brands.id,
+        brand_name: s.brands.name,
+        package_name: s.packages.name,
+        start_date: s.start_date,
+        end_date: s.end_date,
+        email: s.brands.email ?? s.brands.clients?.email ?? null
+      })) ?? [];
 
   return (
     <AppShell title="Izvještaji" role={u.role}>
