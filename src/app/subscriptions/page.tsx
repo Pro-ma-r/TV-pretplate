@@ -9,12 +9,17 @@ import { SubscriptionsTable } from "@/src/components/SubscriptionsTable";
 
 type SubscriptionRow = SubscriptionWithStatus & {
   brand_name?: string;
-  package_name?: string;
   client_email?: string;
 };
 
+type BrandRow = {
+  brand_id: string;
+  brand_name: string;
+  email?: string;
+  is_disabled: boolean;
+};
+
 export default async function SubscriptionsPage(props: any) {
-  // ✅ OVO JE KLJUČ
   const supabase = await supabaseServer();
 
   const u = await requireUser(supabase);
@@ -22,6 +27,7 @@ export default async function SubscriptionsPage(props: any) {
 
   const q = props?.searchParams?.q ?? "";
 
+  // i dalje koristimo RPC
   const subsRes = await supabase.rpc("search_subscriptions", {
     search_text: q
   });
@@ -30,28 +36,32 @@ export default async function SubscriptionsPage(props: any) {
     ? subsRes.data
     : [];
 
-  const brandsRes = await supabase.from("brands").select("id,name");
-  const pkgsRes = await supabase.from("packages").select("id,name");
+  // MAPIRANJE PO BRENDU
+  const brandMap = new Map<string, BrandRow>();
 
-  const brandMap = new Map(
-    (brandsRes.data ?? []).map((b) => [b.id, b.name] as const)
-  );
-  const pkgMap = new Map(
-    (pkgsRes.data ?? []).map((p) => [p.id, p.name] as const)
-  );
+  for (const r of rows) {
+    if (!brandMap.has(r.brand_id)) {
+      brandMap.set(r.brand_id, {
+        brand_id: r.brand_id,
+        brand_name: r.brand_name ?? "—",
+        email: r.client_email ?? undefined,
+        is_disabled: Boolean(r.manually_disabled)
+      });
+    } else {
+      const b = brandMap.get(r.brand_id)!;
+      // ako je ijedan paket ručno isključen → brend je isključen
+      if (r.manually_disabled) {
+        b.is_disabled = true;
+      }
+    }
+  }
 
-  const finalRows = rows.map((r) => ({
-    ...r,
-    brand_name: r.brand_name ?? brandMap.get(r.brand_id),
-    package_name: r.package_name ?? pkgMap.get(r.package_id)
-  }));
+  const brandRows = Array.from(brandMap.values());
 
   return (
     <AppShell title="Pretplate" role={u.role}>
       <SubscriptionsTable
-        rows={finalRows}
-        brands={brandsRes.data ?? []}
-        packages={pkgsRes.data ?? []}
+        rows={brandRows}
         canCreate={u.role === "admin"}
       />
     </AppShell>
