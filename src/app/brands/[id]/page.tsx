@@ -46,6 +46,8 @@ export default async function BrandPage({
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
+  const isAdmin = u.role === "admin";
+
   const { data: brand } = await supabase
     .from("brands")
     .select(
@@ -230,14 +232,14 @@ export default async function BrandPage({
         Pretplate ({subscriptions?.length ?? 0})
       </h2>
 
-      {/* AKTIVNE / ISKLJUČENE */}
+      {/* AKTIVNE */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {activeSubs.map((s) => {
           const packageName = packageMap[s.package_id];
           const canRenew =
+            isAdmin &&
             canRenewPackage(packageName) &&
-            !s.manually_disabled &&
-            !isExpired(s.end_date);
+            !s.manually_disabled;
 
           return (
             <div
@@ -282,22 +284,39 @@ export default async function BrandPage({
           </h3>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {expiredSubs.map((s) => (
-              <div
-                key={s.id}
-                className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 text-xs sm:text-sm opacity-60"
-              >
-                <div className="mb-1 font-medium">
-                  {packageMap[s.package_id] ?? "—"}
-                </div>
+            {expiredSubs.map((s) => {
+              const packageName = packageMap[s.package_id];
+              const canRenew =
+                isAdmin &&
+                canRenewPackage(packageName) &&
+                !s.manually_disabled;
 
-                <div className="text-zinc-400">
-                  {formatDate(s.start_date)} – {formatDate(s.end_date)}
-                </div>
+              return (
+                <div
+                  key={s.id}
+                  className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 text-xs sm:text-sm opacity-60"
+                >
+                  <div className="mb-1 font-medium">
+                    {packageName ?? "—"}
+                  </div>
 
-                <div className="mt-1">Neaktivna</div>
-              </div>
-            ))}
+                  <div className="text-zinc-400">
+                    {formatDate(s.start_date)} – {formatDate(s.end_date)}
+                  </div>
+
+                  <div className="mt-1">Neaktivna</div>
+
+                  {canRenew && (
+                    <Link
+                      href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
+                      className="mt-3 inline-block text-xs text-green-400 hover:underline"
+                    >
+                      Produži
+                    </Link>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
