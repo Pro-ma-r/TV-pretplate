@@ -1,9 +1,10 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
-import { supabaseServer } from "@/src/lib/supabaseServer";
-import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
+import { requireUser } from "@/src/lib/auth";
+import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 
 function isValidOIB(oib: string) {
   if (!/^\d{11}$/.test(oib)) return false;
@@ -28,9 +29,9 @@ export default async function NewClientPage({
     error?: string;
   }>;
 }) {
+  // 🔐 auth provjera (OBIČNI supabase client)
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
-
   if (!u || u.role !== "admin") redirect("/login");
 
   const sp = await searchParams;
@@ -40,7 +41,8 @@ export default async function NewClientPage({
   async function createClientAndBrand(formData: FormData) {
     "use server";
 
-    const sb = await supabaseServer();
+    // 🚀 ADMIN client (service role)
+    const sb = supabaseAdmin;
 
     const client_name = formData.get("client_name") as string;
     const brand_name = formData.get("brand_name") as string;
@@ -91,7 +93,6 @@ export default async function NewClientPage({
       redirect("/clients/new?error=db");
     }
 
-    // 3️⃣ SUCCESS
     redirect(`/brands/${brand.id}?success=created`);
   }
 
