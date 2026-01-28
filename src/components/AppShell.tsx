@@ -13,6 +13,7 @@ export function AppShell({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const isAdmin = role === "admin";
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -58,6 +59,16 @@ export function AppShell({
             >
               Izvještaji
             </Link>
+
+            {/* ADMIN: NOVI KLIJENT */}
+            {isAdmin && (
+              <Link
+                href="/clients/new"
+                className="ml-2 rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-xs sm:text-sm text-green-400 hover:bg-green-600/30 transition"
+              >
+                + Novi klijent
+              </Link>
+            )}
 
             <span className="ml-4 rounded-full border border-zinc-800 px-3 py-1 text-xs sm:text-sm text-zinc-300">
               {role.toUpperCase()}
@@ -109,6 +120,17 @@ export function AppShell({
               >
                 Izvještaji
               </Link>
+
+              {/* ADMIN: NOVI KLIJENT (MOBILE) */}
+              {isAdmin && (
+                <Link
+                  href="/clients/new"
+                  className="mt-2 rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-2 text-green-400"
+                  onClick={() => setOpen(false)}
+                >
+                  + Novi klijent
+                </Link>
+              )}
 
               <div className="mt-2 flex items-center justify-between border-t border-zinc-800 pt-3">
                 <span className="rounded-full border border-zinc-800 px-3 py-1 text-xs text-zinc-300">
