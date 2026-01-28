@@ -1,8 +1,11 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useState } from "react";
 
 type Row = {
+  brand_id: string;
   brand_name: string;
   package_name: string;
   start_date: string;
@@ -22,6 +25,7 @@ export default function ReportsView({
   rows: Row[];
 }) {
   const router = useRouter();
+  const [copied, setCopied] = useState<string | null>(null);
 
   function submit(formData: FormData) {
     const params = new URLSearchParams();
@@ -30,6 +34,12 @@ export default function ReportsView({
     params.set("dana", formData.get("dana") as string);
 
     router.push(`/reports?${params.toString()}`);
+  }
+
+  async function copyMail(mail: string) {
+    await navigator.clipboard.writeText(mail);
+    setCopied(mail);
+    setTimeout(() => setCopied(null), 1200);
   }
 
   return (
@@ -109,17 +119,43 @@ export default function ReportsView({
             ) : (
               rows.map((r, i) => (
                 <tr key={i} className="border-b border-zinc-900">
-                  <td className="py-2 pr-4">
-                    {r.brand_name}
+                  {/* BREND LINK */}
+                  <td className="py-2 pr-4 font-medium">
+                    <Link
+                      href={`/brands/${r.brand_id}`}
+                      className="text-zinc-200 hover:text-purple-400 transition"
+                    >
+                      {r.brand_name}
+                    </Link>
                   </td>
+
                   <td className="py-2 pr-4">
                     {r.package_name}
                   </td>
-                  <td className="py-2 pr-4">
+
+                  <td className="py-2 pr-4 whitespace-nowrap">
                     {r.start_date} – {r.end_date}
                   </td>
-                  <td className="py-2 pr-4 text-zinc-400">
-                    {r.email ?? "—"}
+
+                  {/* COPY MAIL */}
+                  <td className="py-2 pr-4">
+                    {r.email ? (
+                      <button
+                        type="button"
+                        onClick={() => copyMail(r.email!)}
+                        className="text-zinc-400 hover:text-green-400 transition"
+                        title="Klikni za copy"
+                      >
+                        {r.email}
+                        {copied === r.email && (
+                          <span className="ml-2 text-xs text-green-500">
+                            kopirano
+                          </span>
+                        )}
+                      </button>
+                    ) : (
+                      "—"
+                    )}
                   </td>
                 </tr>
               ))
