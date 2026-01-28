@@ -23,18 +23,19 @@ function isValidOIB(oib: string) {
 export default async function NewClientPage({
   searchParams
 }: {
-  searchParams?: {
+  searchParams?: Promise<{
     success?: string;
     error?: string;
-  };
+  }>;
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
 
   if (!u || u.role !== "admin") redirect("/login");
 
-  const success = searchParams?.success;
-  const error = searchParams?.error;
+  const sp = await searchParams;
+  const success = sp?.success;
+  const error = sp?.error;
 
   async function createClientAndBrand(formData: FormData) {
     "use server";
@@ -54,7 +55,7 @@ export default async function NewClientPage({
       redirect("/clients/new?error=oib");
     }
 
-    // 1️⃣ INSERT CLIENT
+    // 1️⃣ CLIENT
     const { data: client, error: clientError } = await sb
       .from("clients")
       .insert({
@@ -72,7 +73,7 @@ export default async function NewClientPage({
       redirect("/clients/new?error=db");
     }
 
-    // 2️⃣ INSERT BRAND
+    // 2️⃣ BRAND
     const { data: brand, error: brandError } = await sb
       .from("brands")
       .insert({
@@ -116,10 +117,6 @@ export default async function NewClientPage({
         {error === "db" && (
           <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-2 text-sm text-red-400">
             Došlo je do greške pri spremanju podataka.
-            <br />
-            <span className="text-xs text-zinc-400">
-              Provjeri server log.
-            </span>
           </div>
         )}
 
