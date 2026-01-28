@@ -16,12 +16,16 @@ function formatDate(d?: string | null) {
   return new Date(d).toLocaleDateString("hr-HR");
 }
 
+function isExpired(endDate?: string | null) {
+  return endDate ? new Date(endDate) < new Date() : false;
+}
+
 function deriveStatus(s: {
   manually_disabled: boolean | null;
   end_date: string | null;
 }) {
   if (s.manually_disabled) return "Isključena";
-  if (s.end_date && new Date(s.end_date) < new Date()) return "Neaktivna";
+  if (isExpired(s.end_date)) return "Neaktivna";
   return "Aktivna";
 }
 
@@ -134,6 +138,12 @@ export default async function BrandPage({
       ? subscriptions.every((s) => s.manually_disabled)
       : false;
 
+  const activeSubs =
+    subscriptions?.filter((s) => !isExpired(s.end_date)) ?? [];
+
+  const expiredSubs =
+    subscriptions?.filter((s) => isExpired(s.end_date)) ?? [];
+
   return (
     <AppShell title={brand.name} role={u.role}>
       {/* PROFIL */}
@@ -214,8 +224,9 @@ export default async function BrandPage({
         Pretplate ({subscriptions?.length ?? 0})
       </h2>
 
+      {/* AKTIVNE / ISKLJUČENE */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {subscriptions?.map((s) => (
+        {activeSubs.map((s) => (
           <div
             key={s.id}
             className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs sm:text-sm"
@@ -246,6 +257,36 @@ export default async function BrandPage({
           + Nova pretplata
         </Link>
       </div>
+
+      {/* ISTEKLO */}
+      {expiredSubs.length > 0 && (
+        <div className="mt-10">
+          <h3 className="mb-3 text-sm font-semibold text-zinc-500">
+            Isteklo
+          </h3>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {expiredSubs.map((s) => (
+              <div
+                key={s.id}
+                className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 text-xs sm:text-sm opacity-60"
+              >
+                <div className="mb-1 font-medium">
+                  {packageMap[s.package_id] ?? "—"}
+                </div>
+
+                <div className="text-zinc-400">
+                  {formatDate(s.start_date)} – {formatDate(s.end_date)}
+                </div>
+
+                <div className="mt-1">
+                  Neaktivna
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </AppShell>
   );
 }
