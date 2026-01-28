@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Row = {
   brand_id: string;
@@ -27,11 +27,25 @@ export default function ReportsView({
   const router = useRouter();
   const [copied, setCopied] = useState<string | null>(null);
 
-  function submit(formData: FormData) {
+  // ✅ STATE IZ URL-a (NE defaultValue)
+  const [paketState, setPaketState] = useState(paket);
+  const [istekState, setIstekState] = useState(istek);
+  const [danaState, setDanaState] = useState(String(dana));
+
+  // ako se URL promijeni (back/forward)
+  useEffect(() => {
+    setPaketState(paket);
+    setIstekState(istek);
+    setDanaState(String(dana));
+  }, [paket, istek, dana]);
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+
     const params = new URLSearchParams();
-    params.set("paket", formData.get("paket") as string);
-    params.set("istek", formData.get("istek") as string);
-    params.set("dana", formData.get("dana") as string);
+    params.set("paket", paketState);
+    params.set("istek", istekState);
+    params.set("dana", danaState);
 
     router.push(`/reports?${params.toString()}`);
   }
@@ -46,7 +60,7 @@ export default function ReportsView({
     <div className="space-y-6">
       {/* FILTERI */}
       <form
-        action={submit}
+        onSubmit={submit}
         className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4"
       >
         <h2 className="mb-4 text-base font-semibold">
@@ -55,8 +69,8 @@ export default function ReportsView({
 
         <div className="grid gap-4 sm:grid-cols-3">
           <select
-            name="paket"
-            defaultValue={paket}
+            value={paketState}
+            onChange={(e) => setPaketState(e.target.value as any)}
             className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
           >
             <option value="CONTENT">
@@ -66,8 +80,8 @@ export default function ReportsView({
           </select>
 
           <select
-            name="istek"
-            defaultValue={istek}
+            value={istekState}
+            onChange={(e) => setIstekState(e.target.value as any)}
             className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
           >
             <option value="PAST">
@@ -79,8 +93,8 @@ export default function ReportsView({
           </select>
 
           <select
-            name="dana"
-            defaultValue={dana}
+            value={danaState}
+            onChange={(e) => setDanaState(e.target.value)}
             className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm"
           >
             <option value="5">5 dana</option>
@@ -119,7 +133,6 @@ export default function ReportsView({
             ) : (
               rows.map((r, i) => (
                 <tr key={i} className="border-b border-zinc-900">
-                  {/* BREND LINK */}
                   <td className="py-2 pr-4 font-medium">
                     <Link
                       href={`/brands/${r.brand_id}`}
@@ -137,14 +150,12 @@ export default function ReportsView({
                     {r.start_date} – {r.end_date}
                   </td>
 
-                  {/* COPY MAIL */}
                   <td className="py-2 pr-4">
                     {r.email ? (
                       <button
                         type="button"
-                        onClick={() => copyMail(r.email!)}
+                        onClick={() => copyMail(r.email)}
                         className="text-zinc-400 hover:text-green-400 transition"
-                        title="Klikni za copy"
                       >
                         {r.email}
                         {copied === r.email && (
