@@ -28,10 +28,12 @@ export default function NewSubscriptionForm({
   } | null;
   action: (fd: FormData) => void;
 }) {
+  const today = toInputDate(new Date());
+
   const [packageId, setPackageId] = useState(
     renewData?.package_id ?? ""
   );
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState("");
 
   const selectedPackage = useMemo(
@@ -39,7 +41,7 @@ export default function NewSubscriptionForm({
     [packages, packageId]
   );
 
-  // default OD kod produženja
+  // PRODUŽENJE → OD = dan nakon isteka
   useEffect(() => {
     if (renewData?.end_date) {
       const prevEnd = new Date(renewData.end_date);
@@ -47,7 +49,7 @@ export default function NewSubscriptionForm({
     }
   }, [renewData]);
 
-  // AUTO DO
+  // AUTO DO (reagira na promjenu OD ili paketa)
   useEffect(() => {
     if (startDate && selectedPackage?.duration_days) {
       const end = addDays(
