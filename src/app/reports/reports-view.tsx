@@ -27,7 +27,6 @@ export default function ReportsView({
   const router = useRouter();
   const [copied, setCopied] = useState<string | null>(null);
 
-  // state iz URL-a
   const [paketState, setPaketState] = useState(paket);
   const [istekState, setIstekState] = useState(istek);
   const [danaState, setDanaState] = useState(String(dana));
@@ -153,7 +152,9 @@ export default function ReportsView({
                     {r.email ? (
                       <button
                         type="button"
-                        onClick={() => copyMail(r.email)}
+                        onClick={() =>
+                          r.email && copyMail(r.email)
+                        }
                         className="text-zinc-400 hover:text-green-400 transition"
                         title="Klikni za copy"
                       >
