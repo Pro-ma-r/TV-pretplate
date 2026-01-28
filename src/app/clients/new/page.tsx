@@ -5,13 +5,37 @@ import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
 
-export default async function NewClientPage() {
+function isValidOIB(oib: string) {
+  if (!/^\d{11}$/.test(oib)) return false;
+
+  let a = 10;
+  for (let i = 0; i < 10; i++) {
+    a = a + Number(oib[i]);
+    a = a % 10;
+    if (a === 0) a = 10;
+    a = (a * 2) % 11;
+  }
+
+  const kontrolna = (11 - a) % 10;
+  return kontrolna === Number(oib[10]);
+}
+
+export default async function NewClientPage({
+  searchParams
+}: {
+  searchParams: Promise<{
+    success?: string;
+    error?: string;
+  }>;
+}) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
 
   if (!u || u.role !== "admin") {
     redirect("/login");
   }
+
+  const { success, error } = await searchParams;
 
   async function createClientAndBrand(formData: FormData) {
     "use server";
@@ -20,19 +44,24 @@ export default async function NewClientPage() {
 
     const client_name = formData.get("client_name") as string;
     const brand_name = formData.get("brand_name") as string;
-    const oib = formData.get("oib") as string;
+    const oib = (formData.get("oib") as string)?.trim();
     const address = formData.get("address") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const contact_person = formData.get("contact_person") as string;
     const note = formData.get("note") as string;
 
-    // 1️⃣ KREIRAJ KLIJENTA
+    // ⛔ VALIDACIJA OIB-a
+    if (oib && !isValidOIB(oib)) {
+      redirect("/clients/new?error=oib");
+    }
+
+    // 1️⃣ KLIJENT
     const { data: client, error: clientError } = await sb
       .from("clients")
       .insert({
         name: client_name,
-        oib,
+        oib: oib || null,
         address,
         phone,
         email
@@ -41,10 +70,10 @@ export default async function NewClientPage() {
       .single();
 
     if (clientError || !client) {
-      throw new Error("Greška kod kreiranja klijenta");
+      redirect("/clients/new?error=db");
     }
 
-    // 2️⃣ KREIRAJ BREND
+    // 2️⃣ BREND
     const { data: brand, error: brandError } = await sb
       .from("brands")
       .insert({
@@ -58,11 +87,11 @@ export default async function NewClientPage() {
       .single();
 
     if (brandError || !brand) {
-      throw new Error("Greška kod kreiranja brenda");
+      redirect("/clients/new?error=db");
     }
 
-    // 3️⃣ REDIRECT NA BREND
-    redirect(`/brands/${brand.id}`);
+    // 3️⃣ SUCCESS → BREND
+    redirect(`/brands/${brand.id}?success=created`);
   }
 
   return (
@@ -71,6 +100,25 @@ export default async function NewClientPage() {
         <h2 className="mb-4 text-lg font-semibold">
           Dodavanje klijenta i brenda
         </h2>
+
+        {/* FEEDBACK */}
+        {success && (
+          <div className="mb-4 rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-2 text-sm text-green-400">
+            Klijent i brend su uspješno kreirani.
+          </div>
+        )}
+
+        {error === "oib" && (
+          <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-2 text-sm text-red-400">
+            Uneseni OIB nije ispravan.
+          </div>
+        )}
+
+        {error === "db" && (
+          <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-2 text-sm text-red-400">
+            Došlo je do greške pri spremanju podataka.
+          </div>
+        )}
 
         <form action={createClientAndBrand} className="space-y-4 text-sm">
           <div>
@@ -95,6 +143,7 @@ export default async function NewClientPage() {
             <div className="mb-1 text-zinc-500">OIB</div>
             <input
               name="oib"
+              placeholder="11 znamenki"
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
             />
           </div>
