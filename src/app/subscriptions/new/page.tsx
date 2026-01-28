@@ -31,17 +31,11 @@ export default async function NewSubscriptionPage({
   if (!brandId) redirect("/brands");
 
   // =========================
-  // PODACI ZA PRODUŽENJE
+  // PRODUŽENJE
   // =========================
-  let renewSub: {
-    id: string;
-    package_id: string;
-    end_date: string;
-    duration_days: number;
-  } | null = null;
-
   let defaultStart: string | null = null;
   let defaultEnd: string | null = null;
+  let renewPackageId: string | null = null;
 
   if (renew) {
     const { data } = await supabase
@@ -59,20 +53,16 @@ export default async function NewSubscriptionPage({
       .eq("id", renew)
       .single();
 
-    if (data && data.end_date && data.packages?.duration_days) {
+    const durationDays = data?.packages?.[0]?.duration_days;
+
+    if (data?.end_date && durationDays) {
       const prevEnd = new Date(data.end_date);
       const start = addDays(prevEnd, 1);
-      const end = addDays(start, data.packages.duration_days);
-
-      renewSub = {
-        id: data.id,
-        package_id: data.package_id,
-        end_date: data.end_date,
-        duration_days: data.packages.duration_days
-      };
+      const end = addDays(start, durationDays);
 
       defaultStart = toInputDate(start);
       defaultEnd = toInputDate(end);
+      renewPackageId = data.package_id;
     }
   }
 
@@ -111,7 +101,7 @@ export default async function NewSubscriptionPage({
     <AppShell title="Nova pretplata" role={u.role}>
       <div className="mx-auto max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
         <h2 className="mb-4 text-lg font-semibold">
-          {renewSub ? "Produženje pretplate" : "Nova pretplata"}
+          {renew ? "Produženje pretplate" : "Nova pretplata"}
         </h2>
 
         <form action={createSubscription} className="space-y-4 text-sm">
@@ -119,10 +109,10 @@ export default async function NewSubscriptionPage({
           <div>
             <div className="mb-1 text-zinc-500">Paket</div>
 
-            {renewSub ? (
+            {renewPackageId ? (
               <select
                 name="package_id"
-                defaultValue={renewSub.package_id}
+                defaultValue={renewPackageId}
                 disabled
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
               >
