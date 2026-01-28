@@ -27,12 +27,11 @@ export default function ReportsView({
   const router = useRouter();
   const [copied, setCopied] = useState<string | null>(null);
 
-  // ✅ STATE IZ URL-a (NE defaultValue)
+  // state iz URL-a
   const [paketState, setPaketState] = useState(paket);
   const [istekState, setIstekState] = useState(istek);
   const [danaState, setDanaState] = useState(String(dana));
 
-  // ako se URL promijeni (back/forward)
   useEffect(() => {
     setPaketState(paket);
     setIstekState(istek);
@@ -156,6 +155,7 @@ export default function ReportsView({
                         type="button"
                         onClick={() => copyMail(r.email)}
                         className="text-zinc-400 hover:text-green-400 transition"
+                        title="Klikni za copy"
                       >
                         {r.email}
                         {copied === r.email && (
