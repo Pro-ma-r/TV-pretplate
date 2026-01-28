@@ -29,6 +29,12 @@ function deriveStatus(s: {
   return "Aktivna";
 }
 
+function canRenewPackage(packageName?: string) {
+  return packageName
+    ? packageName.toLowerCase().includes("pristup sadržaju")
+    : false;
+}
+
 export default async function BrandPage({
   params
 }: {
@@ -226,29 +232,39 @@ export default async function BrandPage({
 
       {/* AKTIVNE / ISKLJUČENE */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {activeSubs.map((s) => (
-          <div
-            key={s.id}
-            className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs sm:text-sm"
-          >
-            <div className="mb-1 font-medium">
-              {packageMap[s.package_id] ?? "—"}
-            </div>
+        {activeSubs.map((s) => {
+          const packageName = packageMap[s.package_id];
+          const canRenew =
+            canRenewPackage(packageName) &&
+            !s.manually_disabled &&
+            !isExpired(s.end_date);
 
-            <div className="text-zinc-400">
-              {formatDate(s.start_date)} – {formatDate(s.end_date)}
-            </div>
-
-            <div className="mt-1">{deriveStatus(s)}</div>
-
-            <Link
-              href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
-              className="mt-3 inline-block text-xs text-green-400 hover:underline"
+          return (
+            <div
+              key={s.id}
+              className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs sm:text-sm"
             >
-              Produži
-            </Link>
-          </div>
-        ))}
+              <div className="mb-1 font-medium">
+                {packageName ?? "—"}
+              </div>
+
+              <div className="text-zinc-400">
+                {formatDate(s.start_date)} – {formatDate(s.end_date)}
+              </div>
+
+              <div className="mt-1">{deriveStatus(s)}</div>
+
+              {canRenew && (
+                <Link
+                  href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
+                  className="mt-3 inline-block text-xs text-green-400 hover:underline"
+                >
+                  Produži
+                </Link>
+              )}
+            </div>
+          );
+        })}
 
         <Link
           href={`/subscriptions/new?brand=${id}`}
@@ -279,9 +295,7 @@ export default async function BrandPage({
                   {formatDate(s.start_date)} – {formatDate(s.end_date)}
                 </div>
 
-                <div className="mt-1">
-                  Neaktivna
-                </div>
+                <div className="mt-1">Neaktivna</div>
               </div>
             ))}
           </div>
