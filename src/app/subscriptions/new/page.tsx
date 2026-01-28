@@ -5,6 +5,16 @@ import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
 
+function addDays(date: Date, days: number) {
+  const d = new Date(date);
+  d.setDate(d.getDate() + days);
+  return d;
+}
+
+function toInputDate(d: Date) {
+  return d.toISOString().split("T")[0];
+}
+
 export default async function NewSubscriptionPage({
   searchParams
 }: {
@@ -20,29 +30,63 @@ export default async function NewSubscriptionPage({
   const { brand: brandId, renew } = await searchParams;
   if (!brandId) redirect("/brands");
 
-  // ako je produljenje, učitaj postojeću pretplatu
+  // =========================
+  // PODACI ZA PRODUŽENJE
+  // =========================
   let renewSub: {
     id: string;
     package_id: string;
-    end_date: string | null;
+    end_date: string;
+    duration_days: number;
   } | null = null;
+
+  let defaultStart: string | null = null;
+  let defaultEnd: string | null = null;
 
   if (renew) {
     const { data } = await supabase
       .from("subscriptions")
-      .select("id, package_id, end_date")
+      .select(
+        `
+        id,
+        package_id,
+        end_date,
+        packages (
+          duration_days
+        )
+      `
+      )
       .eq("id", renew)
       .single();
 
-    if (data) renewSub = data;
+    if (data && data.end_date && data.packages?.duration_days) {
+      const prevEnd = new Date(data.end_date);
+      const start = addDays(prevEnd, 1);
+      const end = addDays(start, data.packages.duration_days);
+
+      renewSub = {
+        id: data.id,
+        package_id: data.package_id,
+        end_date: data.end_date,
+        duration_days: data.packages.duration_days
+      };
+
+      defaultStart = toInputDate(start);
+      defaultEnd = toInputDate(end);
+    }
   }
 
-  // paketi
+  // =========================
+  // PAKETI
+  // =========================
   const { data: packages } = await supabase
     .from("packages")
-    .select("id, name")
+    .select("id, name, duration_days")
     .order("name");
 
+  // =========================
+  // CREATE
+  // =========================
   async function createSubscription(formData: FormData) {
     "use server";
 
@@ -65,7 +109,7 @@ export default async function NewSubscriptionPage({
 
   return (
     <AppShell title="Nova pretplata" role={u.role}>
-      <div className="mx-auto max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/40 p-6">
+      <div className="mx-auto max-w-lg rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
         <h2 className="mb-4 text-lg font-semibold">
           {renewSub ? "Produženje pretplate" : "Nova pretplata"}
         </h2>
@@ -111,6 +155,7 @@ export default async function NewSubscriptionPage({
               type="date"
               name="start_date"
               required
+              defaultValue={defaultStart ?? undefined}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
             />
           </div>
@@ -122,13 +167,14 @@ export default async function NewSubscriptionPage({
               type="date"
               name="end_date"
               required
+              defaultValue={defaultEnd ?? undefined}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
             />
           </div>
 
           <button
             type="submit"
-            className="w-full rounded-lg bg-green-600/80 py-2 text-sm font-medium text-white hover:bg-green-600"
+            className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600"
           >
             Spremi pretplatu
           </button>
