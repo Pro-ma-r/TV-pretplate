@@ -31,40 +31,10 @@ export default async function NewSubscriptionPage({
   if (!brandId) redirect("/brands");
 
   // =========================
-  // PRODUŽENJE – DATUMI
+  // DEFAULT DATUMI (RENEW)
   // =========================
   let defaultStart: string | null = null;
   let defaultEnd: string | null = null;
-
-  if (renew) {
-    const { data } = await supabase
-      .from("subscriptions")
-      .select(
-        `
-        id,
-        end_date,
-        packages (
-          duration_days
-        )
-      `
-      )
-      .eq("id", renew)
-      .single();
-
-    const durationDays =
-      Array.isArray(data?.packages)
-        ? data.packages[0]?.duration_days
-        : data?.packages?.duration_days;
-
-    if (data?.end_date && durationDays) {
-      const prevEnd = new Date(data.end_date);
-      const start = addDays(prevEnd, 1);
-      const end = addDays(start, durationDays);
-
-      defaultStart = toInputDate(start);
-      defaultEnd = toInputDate(end);
-    }
-  }
 
   // =========================
   // PAKETI
@@ -73,6 +43,29 @@ export default async function NewSubscriptionPage({
     .from("packages")
     .select("id, name, duration_days")
     .order("name");
+
+  if (renew && packages) {
+    const { data: sub } = await supabase
+      .from("subscriptions")
+      .select("id, end_date, package_id")
+      .eq("id", renew)
+      .single();
+
+    if (sub?.end_date && sub.package_id) {
+      const pkg = packages.find(
+        (p) => p.id === sub.package_id
+      );
+
+      if (pkg?.duration_days) {
+        const prevEnd = new Date(sub.end_date);
+        const start = addDays(prevEnd, 1);
+        const end = addDays(start, pkg.duration_days);
+
+        defaultStart = toInputDate(start);
+        defaultEnd = toInputDate(end);
+      }
+    }
+  }
 
   // =========================
   // CREATE
