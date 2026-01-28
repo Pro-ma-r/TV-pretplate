@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -14,12 +13,10 @@ function toInputDate(d: Date) {
 }
 
 export default function NewSubscriptionForm({
-  brandId,
   packages,
   renewData,
   action
 }: {
-  brandId: string;
   packages: Array<{
     id: string;
     name: string;
@@ -29,11 +26,8 @@ export default function NewSubscriptionForm({
     package_id: string;
     end_date: string;
   } | null;
-  action: (fd: FormData) => Promise<{ ok: boolean }>;
+  action: (fd: FormData) => void;
 }) {
-  const router = useRouter();
-  const [isPending, startTransition] = useTransition();
-
   const [packageId, setPackageId] = useState(
     renewData?.package_id ?? ""
   );
@@ -45,14 +39,15 @@ export default function NewSubscriptionForm({
     [packages, packageId]
   );
 
+  // default OD kod produženja
   useEffect(() => {
     if (renewData?.end_date) {
       const prevEnd = new Date(renewData.end_date);
-      const start = addDays(prevEnd, 1);
-      setStartDate(toInputDate(start));
+      setStartDate(toInputDate(addDays(prevEnd, 1)));
     }
   }, [renewData]);
 
+  // AUTO DO
   useEffect(() => {
     if (startDate && selectedPackage?.duration_days) {
       const end = addDays(
@@ -69,7 +64,7 @@ export default function NewSubscriptionForm({
         {renewData ? "Produženje pretplate" : "Nova pretplata"}
       </h2>
 
-      <form className="space-y-4 text-sm">
+      <form action={action} className="space-y-4 text-sm">
         <div>
           <div className="mb-1 text-zinc-500">Paket</div>
           <select
@@ -114,18 +109,9 @@ export default function NewSubscriptionForm({
 
         <button
           type="submit"
-          formAction={async (fd) => {
-            startTransition(async () => {
-              const res = await action(fd);
-              if (res.ok) {
-                router.push(`/brands/${brandId}`);
-              }
-            });
-          }}
-          disabled={isPending}
-          className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600 disabled:opacity-60"
+          className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600"
         >
-          {isPending ? "Spremanje..." : "Spremi pretplatu"}
+          Spremi pretplatu
         </button>
       </form>
     </div>
