@@ -8,29 +8,33 @@ import { AppShell } from "@/src/components/AppShell";
 export default async function NewSubscriptionPage({
   searchParams
 }: {
-  searchParams: {
+  searchParams: Promise<{
     brand?: string;
     renew?: string;
-  };
+  }>;
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
   if (!u || u.role !== "admin") redirect("/login");
 
-  const brandId = searchParams.brand;
+  const { brand: brandId, renew } = await searchParams;
   if (!brandId) redirect("/brands");
 
   // ako je produljenje, učitaj postojeću pretplatu
-  let renewSub: any = null;
+  let renewSub: {
+    id: string;
+    package_id: string;
+    end_date: string | null;
+  } | null = null;
 
-  if (searchParams.renew) {
+  if (renew) {
     const { data } = await supabase
       .from("subscriptions")
       .select("id, package_id, end_date")
-      .eq("id", searchParams.renew)
+      .eq("id", renew)
       .single();
 
-    renewSub = data;
+    if (data) renewSub = data;
   }
 
   // paketi
@@ -100,7 +104,7 @@ export default async function NewSubscriptionPage({
             )}
           </div>
 
-          {/* DATUMI */}
+          {/* DATUM OD */}
           <div>
             <div className="mb-1 text-zinc-500">Datum OD</div>
             <input
@@ -111,6 +115,7 @@ export default async function NewSubscriptionPage({
             />
           </div>
 
+          {/* DATUM DO */}
           <div>
             <div className="mb-1 text-zinc-500">Datum DO</div>
             <input
