@@ -4,7 +4,6 @@ import { redirect } from "next/navigation";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
-import { NewSubscriptionForm } from "@/src/components/NewSubscriptionForm";
 
 function addDays(date: Date, days: number) {
   const d = new Date(date);
@@ -32,6 +31,42 @@ export default async function NewSubscriptionPage({
   if (!brandId) redirect("/brands");
 
   // =========================
+  // PRODUŽENJE – DATUMI
+  // =========================
+  let defaultStart: string | null = null;
+  let defaultEnd: string | null = null;
+
+  if (renew) {
+    const { data } = await supabase
+      .from("subscriptions")
+      .select(
+        `
+        id,
+        end_date,
+        packages (
+          duration_days
+        )
+      `
+      )
+      .eq("id", renew)
+      .single();
+
+    const durationDays =
+      Array.isArray(data?.packages)
+        ? data.packages[0]?.duration_days
+        : data?.packages?.duration_days;
+
+    if (data?.end_date && durationDays) {
+      const prevEnd = new Date(data.end_date);
+      const start = addDays(prevEnd, 1);
+      const end = addDays(start, durationDays);
+
+      defaultStart = toInputDate(start);
+      defaultEnd = toInputDate(end);
+    }
+  }
+
+  // =========================
   // PAKETI
   // =========================
   const { data: packages } = await supabase
@@ -39,52 +74,8 @@ export default async function NewSubscriptionPage({
     .select("id, name, duration_days")
     .order("name");
 
-  const pkgList =
-    packages?.map((p) => ({
-      id: p.id as string,
-      name: p.name as string,
-      duration_days: Number(p.duration_days ?? 0)
-    })) ?? [];
-
   // =========================
-  // PRODUŽENJE (DEFAULT OD/DO)
-  // =========================
-  let defaultStart: string | null = null;
-  let defaultEnd: string | null = null;
-  let renewPackageId: string | null = null;
-
-  if (renew) {
-    // 1) dohvatimo pretplatu
-    const { data: sub } = await supabase
-      .from("subscriptions")
-      .select("id, package_id, end_date")
-      .eq("id", renew)
-      .single();
-
-    // 2) dohvatimo trajanje paketa PO package_id (bez join relacija)
-    if (sub?.package_id && sub?.end_date) {
-      const { data: pkg } = await supabase
-        .from("packages")
-        .select("duration_days")
-        .eq("id", sub.package_id)
-        .single();
-
-      const durationDays = Number(pkg?.duration_days ?? 0);
-
-      if (durationDays > 0) {
-        const prevEnd = new Date(sub.end_date);
-        const start = addDays(prevEnd, 1);
-        const end = addDays(start, durationDays);
-
-        defaultStart = toInputDate(start);
-        defaultEnd = toInputDate(end);
-        renewPackageId = sub.package_id;
-      }
-    }
-  }
-
-  // =========================
-  // CREATE (SERVER-SIDE ISTINA)
+  // CREATE
   // =========================
   async function createSubscription(formData: FormData) {
     "use server";
@@ -92,34 +83,21 @@ export default async function NewSubscriptionPage({
     const sb = await supabaseServer();
 
     const package_id = formData.get("package_id") as string;
-    const start_date_raw = formData.get("start_date") as string;
+    const start_date = formData.get("start_date") as string;
+    const end_date = formData.get("end_date") as string;
 
-    if (!package_id || !start_date_raw) {
-      redirect(`/subscriptions/new?brand=${brandId}`);
-    }
-
-    // Trajanje paketa uvijek uzimamo iz baze
-    const { data: pkg } = await sb
-      .from("packages")
-      .select("duration_days")
-      .eq("id", package_id)
-      .single();
-
-    const durationDays = Number(pkg?.duration_days ?? 0);
-    if (durationDays <= 0) {
-      redirect(`/subscriptions/new?brand=${brandId}`);
-    }
-
-    const start = new Date(start_date_raw);
-    const end = addDays(start, durationDays);
-
-    await sb.from("subscriptions").insert({
+    const { error } = await sb.from("subscriptions").insert({
       brand_id: brandId,
       package_id,
-      start_date: toInputDate(start),
-      end_date: toInputDate(end),
+      start_date,
+      end_date,
       manually_disabled: false
     });
+
+    if (error) {
+      console.error("SUBSCRIPTION INSERT ERROR:", error);
+      throw error;
+    }
 
     redirect(`/brands/${brandId}`);
   }
@@ -131,14 +109,55 @@ export default async function NewSubscriptionPage({
           {renew ? "Produženje pretplate" : "Nova pretplata"}
         </h2>
 
-        <NewSubscriptionForm
-          packages={pkgList}
-          renew={Boolean(renew)}
-          renewPackageId={renewPackageId}
-          defaultStart={defaultStart}
-          defaultEnd={defaultEnd}
-          action={createSubscription}
-        />
+        <form action={createSubscription} className="space-y-4 text-sm">
+          {/* PAKET */}
+          <div>
+            <div className="mb-1 text-zinc-500">Paket</div>
+            <select
+              name="package_id"
+              required
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+            >
+              <option value="">— odaberi paket —</option>
+              {packages?.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* DATUM OD */}
+          <div>
+            <div className="mb-1 text-zinc-500">Datum OD</div>
+            <input
+              type="date"
+              name="start_date"
+              required
+              defaultValue={defaultStart ?? undefined}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+            />
+          </div>
+
+          {/* DATUM DO */}
+          <div>
+            <div className="mb-1 text-zinc-500">Datum DO</div>
+            <input
+              type="date"
+              name="end_date"
+              required
+              defaultValue={defaultEnd ?? undefined}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="w-full rounded-lg bg-green-600/80 py-2 font-medium text-white hover:bg-green-600"
+          >
+            Spremi pretplatu
+          </button>
+        </form>
       </div>
     </AppShell>
   );
