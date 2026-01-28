@@ -23,10 +23,10 @@ function isValidOIB(oib: string) {
 export default async function NewClientPage({
   searchParams
 }: {
-  searchParams: Promise<{
+  searchParams?: {
     success?: string;
     error?: string;
-  }>;
+  };
 }) {
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
@@ -35,7 +35,8 @@ export default async function NewClientPage({
     redirect("/login");
   }
 
-  const { success, error } = await searchParams;
+  const success = searchParams?.success;
+  const error = searchParams?.error;
 
   async function createClientAndBrand(formData: FormData) {
     "use server";
@@ -44,14 +45,15 @@ export default async function NewClientPage({
 
     const client_name = formData.get("client_name") as string;
     const brand_name = formData.get("brand_name") as string;
-    const oib = (formData.get("oib") as string)?.trim();
+    const oibRaw = formData.get("oib") as string;
+    const oib = oibRaw?.trim();
     const address = formData.get("address") as string;
     const email = formData.get("email") as string;
     const phone = formData.get("phone") as string;
     const contact_person = formData.get("contact_person") as string;
     const note = formData.get("note") as string;
 
-    // ⛔ VALIDACIJA OIB-a
+    // ⛔ OIB VALIDACIJA
     if (oib && !isValidOIB(oib)) {
       redirect("/clients/new?error=oib");
     }
@@ -90,7 +92,7 @@ export default async function NewClientPage({
       redirect("/clients/new?error=db");
     }
 
-    // 3️⃣ SUCCESS → BREND
+    // 3️⃣ SUCCESS
     redirect(`/brands/${brand.id}?success=created`);
   }
 
