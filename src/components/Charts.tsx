@@ -18,7 +18,7 @@ type PackageBreakdown = {
 };
 
 type MonthData = {
-  month: string; // YYYY-MM-01
+  month: string;
   total: number;
   breakdown: PackageBreakdown[];
 };
@@ -63,14 +63,9 @@ function CustomTooltip({
 
       <div className="space-y-1">
         {data.breakdown.map((b) => (
-          <div
-            key={b.package_name}
-            className="flex justify-between gap-4"
-          >
+          <div key={b.package_name} className="flex justify-between gap-4">
             <span>{b.package_name}</span>
-            <span className="font-medium">
-              {b.subscriptions_count}
-            </span>
+            <span className="font-medium">{b.subscriptions_count}</span>
           </div>
         ))}
       </div>
@@ -96,13 +91,17 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={newSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tickFormatter={formatMonth} />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                interval={0}
+              />
               <YAxis />
               <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar
                 dataKey="total"
                 fill="#9475CC"
-                activeBar={{ fill: "#7E5ACB" }} // 👈 hover boja
+                activeBar={{ fill: "#7E5ACB" }}
                 radius={[6, 6, 0, 0]}
               />
             </BarChart>
@@ -119,7 +118,11 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={endedSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" tickFormatter={formatMonth} />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+                interval={0}
+              />
               <YAxis />
               <Tooltip content={<CustomTooltip />} cursor={false} />
               <Line
