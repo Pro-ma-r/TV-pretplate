@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(request: NextRequest) {
   const response = NextResponse.next();
 
-  // prosljeđujemo pathname root layoutu
+  // šaljemo pathname u header da ga layout može pročitati
   response.headers.set("x-pathname", request.nextUrl.pathname);
 
   return response;
