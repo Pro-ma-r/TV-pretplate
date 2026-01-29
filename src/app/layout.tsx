@@ -14,7 +14,7 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const pathname = headers().get("x-pathname");
+  const pathname = (await headers()).get("x-pathname");
 
   // JAVNE RUTE – bez auth checka
   if (
@@ -42,10 +42,4 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="hr">
-      <body className="min-h-screen bg-zinc-950 text-zinc-100">
-        {children}
-      </body>
-    </html>
-  );
-}
+    <htm
