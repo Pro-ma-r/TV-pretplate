@@ -18,10 +18,20 @@ type PackageBreakdown = {
 };
 
 type MonthData = {
-  month: string;
+  month: string; // YYYY-MM-01
   total: number;
   breakdown: PackageBreakdown[];
 };
+
+const MONTHS_HR = [
+  "Sij", "Vel", "Ožu", "Tra", "Svi", "Lip",
+  "Srp", "Kol", "Ruj", "Lis", "Stu", "Pro"
+];
+
+function formatMonth(month: string) {
+  const d = new Date(month);
+  return `${MONTHS_HR[d.getMonth()]} ${d.getFullYear()}.`;
+}
 
 function CustomTooltip({
   active,
@@ -37,16 +47,32 @@ function CustomTooltip({
   const data: MonthData = payload[0].payload;
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-3 text-sm">
-      <div className="mb-2 font-medium text-zinc-100">{label}</div>
-      <div className="mb-1 text-zinc-300">
+    <div
+      className="rounded-xl p-3 text-sm shadow-lg"
+      style={{
+        background:
+          "linear-gradient(135deg, rgba(148,117,204,0.95), rgba(175,155,216,0.95))",
+        color: "#1f1b2e",
+      }}
+    >
+      <div className="mb-2 font-semibold">
+        {formatMonth(data.month)}
+      </div>
+
+      <div className="mb-2">
         Ukupno: <b>{data.total}</b>
       </div>
-      <div className="mt-2 space-y-1 text-zinc-300">
+
+      <div className="space-y-1">
         {data.breakdown.map((b) => (
-          <div key={b.package_name} className="flex justify-between gap-4">
+          <div
+            key={b.package_name}
+            className="flex justify-between gap-4"
+          >
             <span>{b.package_name}</span>
-            <span>{b.subscriptions_count}</span>
+            <span className="font-medium">
+              {b.subscriptions_count}
+            </span>
           </div>
         ))}
       </div>
@@ -72,7 +98,10 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={newSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+              />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Bar
@@ -94,7 +123,10 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={endedSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="month" />
+              <XAxis
+                dataKey="month"
+                tickFormatter={formatMonth}
+              />
               <YAxis />
               <Tooltip content={<CustomTooltip />} />
               <Line
@@ -102,6 +134,7 @@ export function TrendCharts({
                 dataKey="total"
                 stroke="#AF9BD8"
                 strokeWidth={3}
+                dot={{ r: 4 }}
               />
             </LineChart>
           </ResponsiveContainer>
