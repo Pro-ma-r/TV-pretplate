@@ -67,8 +67,13 @@ export default async function EditBrandPage({
 
   const brand = data;
 
-  // ✅ OVO JE JEDINA ISPRAVKA
-  const client = data.clients ?? null;
+  // ✅ JEDINI FIX: radi i ako Supabase vrati clients kao OBJECT ili kao ARRAY,
+  // i TypeScript više neće tretirati client kao array pa neće pucati na client.id
+  const client = (
+    Array.isArray((data as any).clients)
+      ? (data as any).clients[0]
+      : (data as any).clients
+  ) as any;
 
   async function updateClientAndBrand(formData: FormData) {
     "use server";
@@ -180,6 +185,7 @@ export default async function EditBrandPage({
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
+          {/* GUMBI */}
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
