@@ -5,18 +5,54 @@ import type {
   DashboardStats,
   DashboardPackage,
   DashboardActivity,
-  SubscriptionWithStatus
 } from "@/src/types/db";
 import { AppShell } from "@/src/components/AppShell";
 import { StatCard } from "@/src/components/StatCard";
 import { TrendCharts } from "@/src/components/Charts";
-import { buildMonthlyTrend } from "@/src/lib/trend";
+
+type TrendRow = {
+  month: string;
+  package_name: string;
+  subscriptions_count: number;
+};
+
+type MonthData = {
+  month: string;
+  total: number;
+  breakdown: {
+    package_name: string;
+    subscriptions_count: number;
+  }[];
+};
+
+function buildTrend(rows: TrendRow[]): MonthData[] {
+  const map = new Map<string, MonthData>();
+
+  for (const r of rows) {
+    if (!map.has(r.month)) {
+      map.set(r.month, {
+        month: r.month,
+        total: 0,
+        breakdown: [],
+      });
+    }
+
+    const entry = map.get(r.month)!;
+    entry.total += r.subscriptions_count;
+    entry.breakdown.push({
+      package_name: r.package_name,
+      subscriptions_count: r.subscriptions_count,
+    });
+  }
+
+  return Array.from(map.values()).sort((a, b) =>
+    a.month.localeCompare(b.month)
+  );
+}
 
 export default async function DashboardPage() {
-  // ⬅️ JEDNA Supabase instanca
   const supabase = await supabaseServer();
 
-  // ⬅️ requireUser koristi ISTU instancu
   const u = await requireUser(supabase);
   if (!u) redirect("/login");
 
@@ -35,22 +71,26 @@ export default async function DashboardPage() {
     .select("*")
     .returns<DashboardActivity[]>();
 
-  // ⬅️ NOVO: pristupi koji ističu za 10 dana
   const expiringRes = await supabase
     .from("access_expiring_in_10_days")
     .select("subscription_id", { count: "exact", head: true });
 
-  // trend: uzmemo sve pretplate (~500) i računamo mjesece
-  const subsRes = await supabase
-    .from("subscriptions_with_status")
-    .select("start_date,end_date,status")
-    .returns<
-      Array<Pick<SubscriptionWithStatus, "start_date" | "end_date" | "status">>
-    >();
+  // 🔥 NOVO: VIEW-ovi za grafove
+  const newSubsRes = await supabase
+    .from("dashboard_new_subscriptions_last_6_months")
+    .select("*")
+    .returns<TrendRow[]>();
+
+  const endedSubsRes = await supabase
+    .from("dashboard_ended_subscriptions_last_6_months")
+    .select("*")
+    .returns<TrendRow[]>();
 
   const stats = statsRes.data!;
-  const trend = buildMonthlyTrend(subsRes.data ?? []);
   const expiringCount = expiringRes.count ?? 0;
+
+  const newSubs = buildTrend(newSubsRes.data ?? []);
+  const endedSubs = buildTrend(endedSubsRes.data ?? []);
 
   return (
     <AppShell title="Dashboard" role={u.role}>
@@ -65,7 +105,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <TrendCharts data={trend} />
+        <TrendCharts newSubs={newSubs} endedSubs={endedSubs} />
       </div>
 
       <div className="mt-6 grid gap-4 md:grid-cols-2">
