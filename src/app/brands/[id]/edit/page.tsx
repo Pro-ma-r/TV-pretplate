@@ -24,9 +24,9 @@ function isValidOIB(oib: string) {
 export default async function EditBrandPage({
   params
 }: {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }) {
-  const id = params.id;
+  const { id } = await params;
 
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
@@ -77,20 +77,26 @@ export default async function EditBrandPage({
       redirect(`/brand/${id}/edit?error=oib`);
     }
 
-    await sb.from("clients").update({
-      name: client_name,
-      oib: oib || null,
-      address,
-      phone,
-      email
-    }).eq("id", client.id);
+    await sb
+      .from("clients")
+      .update({
+        name: client_name,
+        oib: oib || null,
+        address,
+        phone,
+        email
+      })
+      .eq("id", client.id);
 
-    await sb.from("brands").update({
-      name: brand_name,
-      email,
-      contact_person,
-      note: note || null
-    }).eq("id", brand.id);
+    await sb
+      .from("brands")
+      .update({
+        name: brand_name,
+        email,
+        contact_person,
+        note: note || null
+      })
+      .eq("id", brand.id);
 
     redirect(`/brand/${id}?success=updated`);
   }
@@ -103,14 +109,57 @@ export default async function EditBrandPage({
         </h2>
 
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
-          <input name="client_name" defaultValue={client?.name ?? ""} required className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input name="brand_name" defaultValue={brand.name} required className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input name="oib" defaultValue={client?.oib ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input name="address" defaultValue={client?.address ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input type="email" name="email" defaultValue={brand.email ?? client?.email ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input name="phone" defaultValue={client?.phone ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <input name="contact_person" defaultValue={brand.contact_person ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
-          <textarea name="note" defaultValue={brand.note ?? ""} rows={3} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input
+            name="client_name"
+            defaultValue={client?.name ?? ""}
+            required
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="brand_name"
+            defaultValue={brand.name}
+            required
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="oib"
+            defaultValue={client?.oib ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="address"
+            defaultValue={client?.address ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            type="email"
+            name="email"
+            defaultValue={brand.email ?? client?.email ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="phone"
+            defaultValue={client?.phone ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="contact_person"
+            defaultValue={brand.contact_person ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <textarea
+            name="note"
+            defaultValue={brand.note ?? ""}
+            rows={3}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
 
           <button className="w-full rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600">
             Spremi promjene
