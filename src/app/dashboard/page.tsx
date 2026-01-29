@@ -94,13 +94,23 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Dashboard" role={u.role}>
+      {/* ✅ ISPRAVAN REDOSLIJED I LABELI */}
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard label="Aktivni brendovi" value={stats.active_brands} />
-        <StatCard label="Neaktivni brendovi" value={stats.former_brands} />
-        <StatCard label="Aktivne pretplate" value={stats.active_subscriptions} />
         <StatCard
           label="Pristupi koji ističu za 10 dana"
           value={expiringCount}
+        />
+        <StatCard
+          label="Aktivni brendovi"
+          value={stats.active_brands}
+        />
+        <StatCard
+          label="Neaktivni brendovi"
+          value={stats.former_brands}
+        />
+        <StatCard
+          label="Isključeni brendovi"
+          value={stats.disabled_brands}
         />
       </div>
 
