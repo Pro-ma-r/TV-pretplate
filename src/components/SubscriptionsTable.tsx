@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 
 type BrandStatus = "AKTIVAN" | "NEAKTIVAN" | "ISKLJUCEN";
@@ -22,12 +22,15 @@ const STATUS_LABELS: Record<BrandStatus, string> = {
 export function SubscriptionsTable({
   rows,
   canCreate,
+  syncUrl = true, // ⬅️ NOVO
 }: {
   rows: BrandRow[];
   canCreate: boolean;
+  syncUrl?: boolean;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const pathname = usePathname();
 
   const initialStatus: "" | BrandStatus =
     searchParams?.get("package") ? "AKTIVAN" : "";
@@ -36,8 +39,11 @@ export function SubscriptionsTable({
   const [status, setStatus] =
     useState<"" | BrandStatus>(initialStatus);
 
-  // 🔒 čuvamo SVE postojeće parametre, mijenjamo samo `q`
+  // 🔒 URL sync SAMO ako smo na /subscriptions
   useEffect(() => {
+    if (!syncUrl) return;
+    if (pathname !== "/subscriptions") return;
+
     const params = new URLSearchParams(
       searchParams ? Array.from(searchParams.entries()) : []
     );
@@ -46,7 +52,7 @@ export function SubscriptionsTable({
     else params.delete("q");
 
     router.replace(`/subscriptions?${params.toString()}`);
-  }, [q, router, searchParams]);
+  }, [q, router, searchParams, pathname, syncUrl]);
 
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
@@ -102,10 +108,7 @@ export function SubscriptionsTable({
 
           <tbody className="text-zinc-200">
             {filteredRows.map((r) => (
-              <tr
-                key={r.brand_id}
-                className="border-b border-zinc-900"
-              >
+              <tr key={r.brand_id} className="border-b border-zinc-900">
                 <td className="py-2 pr-4 font-medium">
                   <Link
                     href={`/brands/${r.brand_id}`}
