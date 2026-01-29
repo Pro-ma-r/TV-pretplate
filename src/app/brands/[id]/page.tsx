@@ -159,19 +159,31 @@ export default async function BrandPage({
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h2 className="text-base sm:text-lg font-semibold">Profil brenda</h2>
 
-          {brandIsDisabled ? (
-            <form action={enableBrand}>
-              <button className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-xs sm:text-sm text-green-400">
-                Uključi brend
-              </button>
-            </form>
-          ) : (
-            <form action={disableBrand}>
-              <button className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-xs sm:text-sm text-red-400">
-                Isključi brend
-              </button>
-            </form>
-          )}
+          <div className="flex items-center gap-2">
+            {/* 🆕 EDIT LINK – SAMO ADMIN */}
+            {isAdmin && (
+              <Link
+                href={`/brands/${id}/edit`}
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1 text-xs sm:text-sm text-zinc-300 hover:text-purple-300 hover:bg-zinc-800 transition"
+              >
+                ✏️ Editiraj brend
+              </Link>
+            )}
+
+            {brandIsDisabled ? (
+              <form action={enableBrand}>
+                <button className="rounded-lg border border-green-600/40 bg-green-600/20 px-3 py-1 text-xs sm:text-sm text-green-400">
+                  Uključi brend
+                </button>
+              </form>
+            ) : (
+              <form action={disableBrand}>
+                <button className="rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-1 text-xs sm:text-sm text-red-400">
+                  Isključi brend
+                </button>
+              </form>
+            )}
+          </div>
         </div>
 
         <div className="grid gap-5 md:grid-cols-2 text-xs sm:text-sm">
