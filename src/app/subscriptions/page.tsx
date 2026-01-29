@@ -12,6 +12,7 @@ type RawRow = {
   client_email?: string;
   manually_disabled: boolean | null;
   end_date: string | null;
+  package_id?: string | null;
 };
 
 type BrandStatus = "AKTIVAN" | "NEAKTIVAN" | "ISKLJUCEN";
@@ -35,14 +36,20 @@ export default async function SubscriptionsPage(props: any) {
   if (!u) redirect("/login");
 
   const q = props?.searchParams?.q ?? "";
+  const packageId = props?.searchParams?.package ?? null;
 
   const subsRes = await supabase.rpc("search_subscriptions", {
     search_text: q
   });
 
-  const rows: RawRow[] = Array.isArray(subsRes.data)
+  let rows: RawRow[] = Array.isArray(subsRes.data)
     ? subsRes.data
     : [];
+
+  // 🔥 FILTER PO PAKETU (ako postoji)
+  if (packageId) {
+    rows = rows.filter((r) => r.package_id === packageId);
+  }
 
   const brandMap = new Map<
     string,
