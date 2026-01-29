@@ -1,13 +1,12 @@
 import { redirect } from "next/navigation";
-import { createServerClient } from "@supabase/auth-helpers-nextjs";
-import { cookies } from "next/headers";
+import { createSupabaseServerClient } from "@/lib/supabaseServer";
 
 export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createServerClient({ cookies });
+  const supabase = createSupabaseServerClient();
 
   const {
     data: { user },
