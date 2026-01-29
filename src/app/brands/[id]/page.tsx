@@ -161,7 +161,6 @@ export default async function BrandPage({
           <h2 className="text-base sm:text-lg font-semibold">Profil brenda</h2>
 
           <div className="flex items-center gap-2">
-            {/* 🆕 EDIT LINK – SAMO ADMIN */}
             {isAdmin && (
               <Link
                 href={`/brands/${id}/edit`}
@@ -278,22 +277,12 @@ export default async function BrandPage({
                 </Link>
               )}
 
-              {/* 🗑 DELETE PRETPLATE – SAMO ADMIN */}
               {isAdmin && (
-                <form
-                  action={deleteSubscription}
-                  className="mt-3"
-                  onSubmit={(e) => {
-                    if (!confirm("Sigurno želiš obrisati ovu pretplatu?")) {
-                      e.preventDefault();
-                    }
-                  }}
-                >
+                <form action={deleteSubscription} className="mt-3">
                   <input type="hidden" name="id" value={s.id} />
                   <button
                     type="submit"
                     className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
-                    title="Obriši pretplatu"
                   >
                     🗑 Obriši
                   </button>
@@ -350,22 +339,12 @@ export default async function BrandPage({
                     </Link>
                   )}
 
-                  {/* 🗑 DELETE PRETPLATE – SAMO ADMIN */}
                   {isAdmin && (
-                    <form
-                      action={deleteSubscription}
-                      className="mt-3"
-                      onSubmit={(e) => {
-                        if (!confirm("Sigurno želiš obrisati ovu pretplatu?")) {
-                          e.preventDefault();
-                        }
-                      }}
-                    >
+                    <form action={deleteSubscription} className="mt-3">
                       <input type="hidden" name="id" value={s.id} />
                       <button
                         type="submit"
                         className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
-                        title="Obriši pretplatu"
                       >
                         🗑 Obriši
                       </button>
