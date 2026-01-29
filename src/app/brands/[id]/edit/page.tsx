@@ -57,8 +57,7 @@ export default async function EditBrandPage({
   if (!data) redirect("/dashboard");
 
   const brand = data;
-  const client = data.clients?.[0]; // ✅ OVO JE BITNO
-
+  const client = data.clients?.[0];
   if (!client) redirect("/dashboard");
 
   async function updateClientAndBrand(formData: FormData) {
@@ -76,10 +75,10 @@ export default async function EditBrandPage({
     const note = formData.get("note") as string;
 
     if (oib && !isValidOIB(oib)) {
-      redirect(`/brand/${id}/edit?error=oib`);
+      redirect(`/brands/${id}/edit?error=oib`);
     }
 
-    // ✅ UPDATE CLIENT
+    // UPDATE CLIENT
     await sb
       .from("clients")
       .update({
@@ -91,7 +90,7 @@ export default async function EditBrandPage({
       })
       .eq("id", client.id);
 
-    // ✅ UPDATE BRAND
+    // UPDATE BRAND
     await sb
       .from("brands")
       .update({
@@ -102,7 +101,7 @@ export default async function EditBrandPage({
       })
       .eq("id", brand.id);
 
-    redirect(`/brand/${id}?success=updated`);
+    redirect(`/brands/${id}?success=updated`);
   }
 
   return (
