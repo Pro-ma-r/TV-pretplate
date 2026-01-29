@@ -94,12 +94,18 @@ export default async function DashboardPage() {
 
   return (
     <AppShell title="Dashboard" role={u.role}>
-      {/* ✅ ISPRAVAN REDOSLIJED I LABELI */}
       <div className="grid gap-4 md:grid-cols-4">
-        <StatCard
-          label="Pristupi koji ističu za 10 dana"
-          value={expiringCount}
-        />
+        {/* ⬅️ LINK KARTICA */}
+        <Link
+          href="/subscriptions?expiring=10"
+          className="block hover:opacity-90"
+        >
+          <StatCard
+            label="Pristupi koji ističu za 10 dana"
+            value={expiringCount}
+          />
+        </Link>
+
         <StatCard
           label="Aktivni brendovi"
           value={stats.active_brands}
@@ -168,12 +174,8 @@ export default async function DashboardPage() {
                   key={`${a.activity ?? "—"}-${i}`}
                   className="border-b border-zinc-900"
                 >
-                  <td className="py-2 pr-4">
-                    {a.activity ?? "—"}
-                  </td>
-                  <td className="py-2 pr-4">
-                    {a.total_brands}
-                  </td>
+                  <td className="py-2 pr-4">{a.activity ?? "—"}</td>
+                  <td className="py-2 pr-4">{a.total_brands}</td>
                   <td className="py-2 pr-4">
                     {a.active_subscriptions}
                   </td>
