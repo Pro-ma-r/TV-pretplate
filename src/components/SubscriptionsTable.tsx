@@ -22,7 +22,7 @@ const STATUS_LABELS: Record<BrandStatus, string> = {
 export function SubscriptionsTable({
   rows,
   canCreate,
-  syncUrl = true, // ⬅️ NOVO
+  syncUrl = true,
 }: {
   rows: BrandRow[];
   canCreate: boolean;
@@ -39,7 +39,7 @@ export function SubscriptionsTable({
   const [status, setStatus] =
     useState<"" | BrandStatus>(initialStatus);
 
-  // 🔒 URL sync SAMO ako smo na /subscriptions
+  // URL sync samo na /subscriptions
   useEffect(() => {
     if (!syncUrl) return;
     if (pathname !== "/subscriptions") return;
@@ -66,6 +66,10 @@ export function SubscriptionsTable({
       return matchText && matchStatus;
     });
   }, [rows, q, status]);
+
+  function copyEmail(email: string) {
+    navigator.clipboard.writeText(email);
+  }
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4">
@@ -119,7 +123,17 @@ export function SubscriptionsTable({
                 </td>
 
                 <td className="py-2 pr-4 text-zinc-400">
-                  {r.email ?? "—"}
+                  {r.email ? (
+                    <button
+                      onClick={() => copyEmail(r.email!)}
+                      title="Kopiraj email"
+                      className="hover:text-purple-400 transition-colors"
+                    >
+                      {r.email}
+                    </button>
+                  ) : (
+                    "—"
+                  )}
                 </td>
 
                 <td className="py-2 pr-4">
