@@ -16,12 +16,12 @@ type BrandRow = {
 const STATUS_LABELS: Record<BrandStatus, string> = {
   AKTIVAN: "Aktivan",
   NEAKTIVAN: "Neaktivan",
-  ISKLJUCEN: "Isključen"
+  ISKLJUCEN: "Isključen",
 };
 
 export function SubscriptionsTable({
   rows,
-  canCreate
+  canCreate,
 }: {
   rows: BrandRow[];
   canCreate: boolean;
@@ -33,10 +33,15 @@ export function SubscriptionsTable({
   const [status, setStatus] = useState<"" | BrandStatus>("");
 
   useEffect(() => {
-    const params = new URLSearchParams();
+    const params = new URLSearchParams(
+      searchParams ? Array.from(searchParams.entries()) : []
+    );
+
     if (q) params.set("q", q);
+    else params.delete("q");
+
     router.replace(`/subscriptions?${params.toString()}`);
-  }, [q, router]);
+  }, [q, router, searchParams]);
 
   const filteredRows = useMemo(() => {
     return rows.filter((r) => {
