@@ -155,7 +155,7 @@ export default async function EditBrandPage({
           />
 
           <input
-            type="email"
+            type="text"
             name="email"
             defaultValue={brand.email ?? client?.email ?? ""}
             placeholder="Email"
