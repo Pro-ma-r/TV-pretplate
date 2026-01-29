@@ -39,6 +39,8 @@ export function SubscriptionsTable({
   const [status, setStatus] =
     useState<"" | BrandStatus>(initialStatus);
 
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+
   // URL sync samo na /subscriptions
   useEffect(() => {
     if (!syncUrl) return;
@@ -69,6 +71,11 @@ export function SubscriptionsTable({
 
   function copyEmail(email: string) {
     navigator.clipboard.writeText(email);
+    setCopiedEmail(email);
+
+    setTimeout(() => {
+      setCopiedEmail(null);
+    }, 1500);
   }
 
   return (
@@ -111,45 +118,52 @@ export function SubscriptionsTable({
           </thead>
 
           <tbody className="text-zinc-200">
-            {filteredRows.map((r) => (
-              <tr key={r.brand_id} className="border-b border-zinc-900">
-                <td className="py-2 pr-4 font-medium">
-                  <Link
-                    href={`/brands/${r.brand_id}`}
-                    className="text-zinc-200 hover:text-purple-400 transition-colors"
-                  >
-                    {r.brand_name}
-                  </Link>
-                </td>
+            {filteredRows.map((r) => {
+              const isCopied = copiedEmail === r.email;
 
-                <td className="py-2 pr-4 text-zinc-400">
-                  {r.email ? (
-                    <button
-                      onClick={() => copyEmail(r.email!)}
-                      title="Kopiraj email"
-                      className="hover:text-purple-400 transition-colors"
+              return (
+                <tr key={r.brand_id} className="border-b border-zinc-900">
+                  <td className="py-2 pr-4 font-medium">
+                    <Link
+                      href={`/brands/${r.brand_id}`}
+                      className="text-zinc-200 hover:text-purple-400 transition-colors"
                     >
-                      {r.email}
-                    </button>
-                  ) : (
-                    "—"
-                  )}
-                </td>
+                      {r.brand_name}
+                    </Link>
+                  </td>
 
-                <td className="py-2 pr-4">
-                  {STATUS_LABELS[r.status]}
-                </td>
+                  <td className="py-2 pr-4">
+                    {r.email ? (
+                      <button
+                        onClick={() => copyEmail(r.email!)}
+                        className={`transition-colors ${
+                          isCopied
+                            ? "text-green-400"
+                            : "text-zinc-400 hover:text-purple-400"
+                        }`}
+                      >
+                        {isCopied ? "Kopirano ✓" : r.email}
+                      </button>
+                    ) : (
+                      <span className="text-zinc-500">—</span>
+                    )}
+                  </td>
 
-                <td className="py-2 pr-4">
-                  <Link
-                    href={`/brands/${r.brand_id}`}
-                    className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
-                  >
-                    Uredi
-                  </Link>
-                </td>
-              </tr>
-            ))}
+                  <td className="py-2 pr-4">
+                    {STATUS_LABELS[r.status]}
+                  </td>
+
+                  <td className="py-2 pr-4">
+                    <Link
+                      href={`/brands/${r.brand_id}`}
+                      className="rounded-xl border border-zinc-800 bg-zinc-950 px-3 py-1 text-xs hover:bg-zinc-800"
+                    >
+                      Uredi
+                    </Link>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
 
