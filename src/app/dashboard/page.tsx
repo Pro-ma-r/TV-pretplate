@@ -35,6 +35,11 @@ export default async function DashboardPage() {
     .select("*")
     .returns<DashboardActivity[]>();
 
+  // ⬅️ NOVO: pristupi koji ističu za 10 dana
+  const expiringRes = await supabase
+    .from("access_expiring_in_10_days")
+    .select("subscription_id", { count: "exact", head: true });
+
   // trend: uzmemo sve pretplate (~500) i računamo mjesece
   const subsRes = await supabase
     .from("subscriptions_with_status")
@@ -45,6 +50,7 @@ export default async function DashboardPage() {
 
   const stats = statsRes.data!;
   const trend = buildMonthlyTrend(subsRes.data ?? []);
+  const expiringCount = expiringRes.count ?? 0;
 
   return (
     <AppShell title="Dashboard" role={u.role}>
@@ -53,8 +59,8 @@ export default async function DashboardPage() {
         <StatCard label="Neaktivni brendovi" value={stats.former_brands} />
         <StatCard label="Aktivne pretplate" value={stats.active_subscriptions} />
         <StatCard
-          label="Isključene pretplate"
-          value={stats.disabled_subscriptions}
+          label="Pristupi koji ističu za 10 dana"
+          value={expiringCount}
         />
       </div>
 
