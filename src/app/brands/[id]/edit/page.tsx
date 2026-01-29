@@ -29,9 +29,13 @@ export default async function EditBrandPage({
 }) {
   const { id } = await params;
 
-  const supabase = await supabaseServer();
-  const u = await requireUser(supabase);
-  if (!u) redirect("/login");
+  // 🔐 auth provjera – ostaje kako je bila
+  const supabaseAuth = await supabaseServer();
+  const u = await requireUser(supabaseAuth);
+  if (!u || u.role !== "admin") redirect("/dashboard");
+
+  // ✅ ADMIN CLIENT ZA SELECT (ZAOBILAZI RLS)
+  const supabase = supabaseAdmin;
 
   const { data } = await supabase
     .from("brands")
@@ -64,9 +68,9 @@ export default async function EditBrandPage({
   }
 
   const brand = data;
-
-  // ✅ JEDINA ISPRAVKA – clients JE ARRAY
-  const client = Array.isArray(data.clients) ? data.clients[0] : null;
+  const client = Array.isArray(data.clients)
+    ? data.clients[0]
+    : null;
 
   async function updateClientAndBrand(formData: FormData) {
     "use server";
