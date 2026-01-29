@@ -8,7 +8,8 @@ import Link from "next/link";
 
 import {
   disableSubscription,
-  enableSubscription
+  enableSubscription,
+  deleteSubscription
 } from "@/src/app/subscriptions/actions";
 
 function formatDate(d?: string | null) {
@@ -276,6 +277,28 @@ export default async function BrandPage({
                   Produži
                 </Link>
               )}
+
+              {/* 🗑 DELETE PRETPLATE – SAMO ADMIN */}
+              {isAdmin && (
+                <form
+                  action={deleteSubscription}
+                  className="mt-3"
+                  onSubmit={(e) => {
+                    if (!confirm("Sigurno želiš obrisati ovu pretplatu?")) {
+                      e.preventDefault();
+                    }
+                  }}
+                >
+                  <input type="hidden" name="id" value={s.id} />
+                  <button
+                    type="submit"
+                    className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
+                    title="Obriši pretplatu"
+                  >
+                    🗑 Obriši
+                  </button>
+                </form>
+              )}
             </div>
           );
         })}
@@ -325,6 +348,28 @@ export default async function BrandPage({
                     >
                       Produži
                     </Link>
+                  )}
+
+                  {/* 🗑 DELETE PRETPLATE – SAMO ADMIN */}
+                  {isAdmin && (
+                    <form
+                      action={deleteSubscription}
+                      className="mt-3"
+                      onSubmit={(e) => {
+                        if (!confirm("Sigurno želiš obrisati ovu pretplatu?")) {
+                          e.preventDefault();
+                        }
+                      }}
+                    >
+                      <input type="hidden" name="id" value={s.id} />
+                      <button
+                        type="submit"
+                        className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
+                        title="Obriši pretplatu"
+                      >
+                        🗑 Obriši
+                      </button>
+                    </form>
                   )}
                 </div>
               );
