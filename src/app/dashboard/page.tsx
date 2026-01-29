@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { requireUser } from "@/src/lib/auth";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import type {
@@ -75,7 +76,6 @@ export default async function DashboardPage() {
     .from("access_expiring_in_10_days")
     .select("subscription_id", { count: "exact", head: true });
 
-  // 🔥 NOVO: VIEW-ovi za grafove
   const newSubsRes = await supabase
     .from("dashboard_new_subscriptions_last_6_months")
     .select("*")
@@ -123,8 +123,17 @@ export default async function DashboardPage() {
             <tbody className="text-zinc-200">
               {(pkgsRes.data ?? []).slice(0, 12).map((p) => (
                 <tr key={p.package_id} className="border-b border-zinc-900">
-                  <td className="py-2 pr-4">{p.package_name}</td>
-                  <td className="py-2 pr-4">{p.active_subscriptions}</td>
+                  <td className="py-2 pr-4">
+                    <Link
+                      href={`/subscriptions?package=${p.package_id}`}
+                      className="text-purple-300 hover:text-purple-200 underline-offset-4 hover:underline"
+                    >
+                      {p.package_name}
+                    </Link>
+                  </td>
+                  <td className="py-2 pr-4">
+                    {p.active_subscriptions}
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -149,9 +158,15 @@ export default async function DashboardPage() {
                   key={`${a.activity ?? "—"}-${i}`}
                   className="border-b border-zinc-900"
                 >
-                  <td className="py-2 pr-4">{a.activity ?? "—"}</td>
-                  <td className="py-2 pr-4">{a.total_brands}</td>
-                  <td className="py-2 pr-4">{a.active_subscriptions}</td>
+                  <td className="py-2 pr-4">
+                    {a.activity ?? "—"}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {a.total_brands}
+                  </td>
+                  <td className="py-2 pr-4">
+                    {a.active_subscriptions}
+                  </td>
                 </tr>
               ))}
             </tbody>
