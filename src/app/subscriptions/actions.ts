@@ -45,3 +45,10 @@ export async function createSubscription(formData: FormData) {
   // 🔑 ako kreiraš novu pretplatu, isto osvježi listu
   revalidatePath("/subscriptions");
 }
+export async function deleteSubscription(formData: FormData) {
+  "use server";
+  const id = formData.get("id") as string | null;
+  if (!id) return;
+
+  await supabaseAdmin.from("subscriptions").delete().eq("id", id);
+}
