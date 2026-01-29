@@ -126,7 +126,7 @@ export default async function DashboardPage() {
                   <td className="py-2 pr-4">
                     <Link
                       href={`/subscriptions?package=${p.package_id}`}
-                      className="text-purple-300 hover:text-purple-200 underline-offset-4 hover:underline"
+                      className="text-zinc-200 hover:text-purple-300"
                     >
                       {p.package_name}
                     </Link>
