@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
+import type { CookieOptions } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
   const response = NextResponse.next();
@@ -10,23 +11,29 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get: (name) => request.cookies.get(name)?.value,
-        set: (name, value, options) =>
-          response.cookies.set({ name, value, ...options }),
-        remove: (name, options) =>
-          response.cookies.set({ name, value: "", ...options }),
+        get: (name: string) => request.cookies.get(name)?.value,
+        set: (
+          name: string,
+          value: string,
+          options: CookieOptions
+        ) => {
+          response.cookies.set({ name, value, ...options });
+        },
+        remove: (name: string, options: CookieOptions) => {
+          response.cookies.set({ name, value: "", ...options });
+        },
       },
     }
   );
 
   const { data } = await supabase.auth.getUser();
 
-  // PUBLIC ruta
+  // PUBLIC
   if (request.nextUrl.pathname === "/login") {
     return response;
   }
 
-  // nema usera → login
+  // PROTECTED
   if (!data.user) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
