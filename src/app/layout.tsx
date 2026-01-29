@@ -2,7 +2,6 @@ import "./globals.css";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { supabaseServer } from "../lib/supabaseServer";
-import { headers } from "next/headers";
 
 export const metadata = {
   title: "Tvornica vjenčanja – Admin",
@@ -14,32 +13,19 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  // Next.js 15: headers() je async
-  const requestHeaders = await headers();
-  const pathname = requestHeaders.get("x-pathname") || "";
+  // POKUŠAJ auth, ali NIKAD ne smije srušiti app
+  try {
+    const supabase = await supabaseServer();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  // JAVNE RUTE – ovdje NE radimo auth check
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/logout") ||
-    pathname === "/"
-  ) {
-    return (
-      <html lang="hr">
-        <body className="min-h-screen bg-zinc-950 text-zinc-100">
-          {children}
-        </body>
-      </html>
-    );
-  }
-
-  // AUTH CHECK ZA SVE OSTALO
-  const supabase = await supabaseServer();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
+    // Ako nema usera → login
+    if (!user) {
+      redirect("/login");
+    }
+  } catch {
+    // Ako auth uopće ne može raditi (favicon, cold start, /)
     redirect("/login");
   }
 
