@@ -64,7 +64,9 @@ export default async function EditBrandPage({
   }
 
   const brand = data;
-  const client = data.clients ?? null; // ✅ JEDINA PROMJENA
+
+  // ✅ JEDINA ISPRAVKA – clients JE ARRAY
+  const client = Array.isArray(data.clients) ? data.clients[0] : null;
 
   async function updateClientAndBrand(formData: FormData) {
     "use server";
