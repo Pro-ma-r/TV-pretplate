@@ -2,10 +2,13 @@ export type DashboardStats = {
   total_brands: number;
   active_brands: number;
   former_brands: number;
+
   total_subscriptions: number;
   active_subscriptions: number;
   inactive_subscriptions: number;
   disabled_subscriptions: number;
+
+  disabled_brands: number;
 };
 
 export type DashboardPackage = {
