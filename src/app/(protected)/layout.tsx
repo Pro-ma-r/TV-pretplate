@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "../../lib/supabaseServer";
+import { supabaseServer } from "../../lib/supabaseServer";
 
 export default async function ProtectedLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createSupabaseServerClient();
+  const supabase = await supabaseServer();
 
   const {
     data: { user },
