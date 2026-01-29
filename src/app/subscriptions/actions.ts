@@ -1,6 +1,7 @@
 "use server";
 
 import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseAdmin } from "@/src/lib/supabaseAdmin"; // ✅ OVO JE FALILO
 import { revalidatePath } from "next/cache";
 
 export async function disableSubscription(formData: FormData) {
@@ -13,7 +14,6 @@ export async function disableSubscription(formData: FormData) {
     p_reason: "Isključeno iz admin panela"
   });
 
-  // 🔑 osvježi pretplate nakon promjene
   revalidatePath("/subscriptions");
 }
 
@@ -26,7 +26,6 @@ export async function enableSubscription(formData: FormData) {
     p_subscription_id: id
   });
 
-  // 🔑 osvježi pretplate nakon promjene
   revalidatePath("/subscriptions");
 }
 
@@ -42,13 +41,17 @@ export async function createSubscription(formData: FormData) {
     p_note: formData.get("note") ?? null
   });
 
-  // 🔑 ako kreiraš novu pretplatu, isto osvježi listu
   revalidatePath("/subscriptions");
 }
+
 export async function deleteSubscription(formData: FormData) {
-  "use server";
   const id = formData.get("id") as string | null;
   if (!id) return;
 
-  await supabaseAdmin.from("subscriptions").delete().eq("id", id);
+  await supabaseAdmin
+    .from("subscriptions")
+    .delete()
+    .eq("id", id);
+
+  revalidatePath("/subscriptions"); // opcionalno, ali preporučeno
 }
