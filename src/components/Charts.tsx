@@ -18,7 +18,7 @@ type PackageBreakdown = {
 };
 
 type MonthData = {
-  month: string; // YYYY-MM-01
+  month: string;
   total: number;
   breakdown: PackageBreakdown[];
 };
@@ -36,11 +36,9 @@ function formatMonth(month: string) {
 function CustomTooltip({
   active,
   payload,
-  label,
 }: {
   active?: boolean;
   payload?: any[];
-  label?: string;
 }) {
   if (!active || !payload || !payload.length) return null;
 
@@ -98,12 +96,9 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={newSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tickFormatter={formatMonth}
-              />
+              <XAxis dataKey="month" tickFormatter={formatMonth} />
               <YAxis />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar
                 dataKey="total"
                 fill="#9475CC"
@@ -123,12 +118,9 @@ export function TrendCharts({
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={endedSubs}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tickFormatter={formatMonth}
-              />
+              <XAxis dataKey="month" tickFormatter={formatMonth} />
               <YAxis />
-              <Tooltip content={<CustomTooltip />} />
+              <Tooltip content={<CustomTooltip />} cursor={false} />
               <Line
                 type="monotone"
                 dataKey="total"
