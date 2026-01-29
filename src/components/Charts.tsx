@@ -18,7 +18,7 @@ type PackageBreakdown = {
 };
 
 type MonthData = {
-  month: string;
+  month: string; // YYYY-MM-01
   total: number;
   breakdown: PackageBreakdown[];
 };
@@ -63,9 +63,14 @@ function CustomTooltip({
 
       <div className="space-y-1">
         {data.breakdown.map((b) => (
-          <div key={b.package_name} className="flex justify-between gap-4">
+          <div
+            key={b.package_name}
+            className="flex justify-between gap-4"
+          >
             <span>{b.package_name}</span>
-            <span className="font-medium">{b.subscriptions_count}</span>
+            <span className="font-medium">
+              {b.subscriptions_count}
+            </span>
           </div>
         ))}
       </div>
@@ -89,14 +94,17 @@ export function TrendCharts({
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={newSubs}>
+            <BarChart
+              data={newSubs}
+              margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="month"
                 tickFormatter={formatMonth}
                 interval={0}
               />
-              <YAxis />
+              <YAxis width={32} />
               <Tooltip content={<CustomTooltip />} cursor={false} />
               <Bar
                 dataKey="total"
@@ -116,14 +124,17 @@ export function TrendCharts({
         </div>
         <div className="h-64">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={endedSubs}>
+            <LineChart
+              data={endedSubs}
+              margin={{ top: 8, right: 16, bottom: 0, left: 0 }}
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis
                 dataKey="month"
                 tickFormatter={formatMonth}
                 interval={0}
               />
-              <YAxis />
+              <YAxis width={32} />
               <Tooltip content={<CustomTooltip />} cursor={false} />
               <Line
                 type="monotone"
