@@ -24,16 +24,19 @@ function isValidOIB(oib: string) {
 export default async function EditBrandPage({
   params
 }: {
-  params: { brandId: string };
+  params: { id: string };
 }) {
+  const id = params.id;
+
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
   if (!u || u.role !== "admin") redirect("/dashboard");
 
-  // 1️⃣ Dohvat brenda + klijenta
+  // 🔹 Dohvat brenda + klijenta
   const { data, error } = await supabase
     .from("brands")
-    .select(`
+    .select(
+      `
       id,
       name,
       email,
@@ -47,11 +50,12 @@ export default async function EditBrandPage({
         phone,
         email
       )
-    `)
-    .eq("id", params.brandId)
+    `
+    )
+    .eq("id", id)
     .single();
 
-  if (!data || error) redirect("/dashboard");
+  if (error || !data) redirect("/dashboard");
 
   const brand = data;
   const client = data.clients;
@@ -71,10 +75,10 @@ export default async function EditBrandPage({
     const note = formData.get("note") as string;
 
     if (oib && !isValidOIB(oib)) {
-      redirect(`/brands/${brand.id}/edit?error=oib`);
+      redirect(`/brand/${id}/edit?error=oib`);
     }
 
-    // 2️⃣ UPDATE CLIENT
+    // 🔹 UPDATE CLIENT
     await sb
       .from("clients")
       .update({
@@ -86,7 +90,7 @@ export default async function EditBrandPage({
       })
       .eq("id", client.id);
 
-    // 3️⃣ UPDATE BRAND
+    // 🔹 UPDATE BRAND
     await sb
       .from("brands")
       .update({
@@ -97,7 +101,7 @@ export default async function EditBrandPage({
       })
       .eq("id", brand.id);
 
-    redirect(`/brands/${brand.id}?success=updated`);
+    redirect(`/brand/${id}?success=updated`);
   }
 
   return (
@@ -110,8 +114,9 @@ export default async function EditBrandPage({
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
           <input
             name="client_name"
-            defaultValue={client.name}
+            defaultValue={client?.name ?? ""}
             required
+            placeholder="Klijent"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
@@ -119,37 +124,43 @@ export default async function EditBrandPage({
             name="brand_name"
             defaultValue={brand.name}
             required
+            placeholder="Brend"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="oib"
-            defaultValue={client.oib ?? ""}
+            defaultValue={client?.oib ?? ""}
+            placeholder="OIB"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="address"
-            defaultValue={client.address ?? ""}
+            defaultValue={client?.address ?? ""}
+            placeholder="Adresa"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             type="email"
             name="email"
-            defaultValue={brand.email ?? ""}
+            defaultValue={brand.email ?? client?.email ?? ""}
+            placeholder="Email"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="phone"
-            defaultValue={client.phone ?? ""}
+            defaultValue={client?.phone ?? ""}
+            placeholder="Telefon"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="contact_person"
             defaultValue={brand.contact_person ?? ""}
+            placeholder="Kontakt osoba"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
@@ -157,14 +168,8 @@ export default async function EditBrandPage({
             name="note"
             defaultValue={brand.note ?? ""}
             rows={3}
+            placeholder="Napomena"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
-          <button className="w-full rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600">
-            Spremi promjene
-          </button>
-        </form>
-      </div>
-    </AppShell>
-  );
-}
+          <but
