@@ -18,14 +18,14 @@ type PackageBreakdown = {
 };
 
 type MonthData = {
-  month: string;
+  month: string; // YYYY-MM-01
   total: number;
   breakdown: PackageBreakdown[];
 };
 
 const MONTHS_HR = [
   "Sij", "Vel", "Ožu", "Tra", "Svi", "Lip",
-  "Srp", "Kol", "Ruj", "Lis", "Stu", "Pro"
+  "Srp", "Kol", "Ruj", "Lis", "Stu", "Pro",
 ];
 
 function formatMonth(month: string) {
@@ -102,6 +102,7 @@ export function TrendCharts({
               <Bar
                 dataKey="total"
                 fill="#9475CC"
+                activeBar={{ fill: "#7E5ACB" }} // 👈 hover boja
                 radius={[6, 6, 0, 0]}
               />
             </BarChart>
