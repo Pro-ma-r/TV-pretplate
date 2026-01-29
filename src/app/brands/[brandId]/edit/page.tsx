@@ -1,0 +1,170 @@
+export const dynamic = "force-dynamic";
+
+import { redirect } from "next/navigation";
+import { AppShell } from "@/src/components/AppShell";
+import { requireUser } from "@/src/lib/auth";
+import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
+
+function isValidOIB(oib: string) {
+  if (!/^\d{11}$/.test(oib)) return false;
+
+  let a = 10;
+  for (let i = 0; i < 10; i++) {
+    a = a + Number(oib[i]);
+    a = a % 10;
+    if (a === 0) a = 10;
+    a = (a * 2) % 11;
+  }
+
+  const kontrolna = (11 - a) % 10;
+  return kontrolna === Number(oib[10]);
+}
+
+export default async function EditBrandPage({
+  params
+}: {
+  params: { brandId: string };
+}) {
+  const supabase = await supabaseServer();
+  const u = await requireUser(supabase);
+  if (!u || u.role !== "admin") redirect("/dashboard");
+
+  // 1️⃣ Dohvat brenda + klijenta
+  const { data, error } = await supabase
+    .from("brands")
+    .select(`
+      id,
+      name,
+      email,
+      contact_person,
+      note,
+      clients (
+        id,
+        name,
+        oib,
+        address,
+        phone,
+        email
+      )
+    `)
+    .eq("id", params.brandId)
+    .single();
+
+  if (!data || error) redirect("/dashboard");
+
+  const brand = data;
+  const client = data.clients;
+
+  async function updateClientAndBrand(formData: FormData) {
+    "use server";
+
+    const sb = supabaseAdmin;
+
+    const client_name = formData.get("client_name") as string;
+    const brand_name = formData.get("brand_name") as string;
+    const oib = (formData.get("oib") as string)?.trim();
+    const address = formData.get("address") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
+    const contact_person = formData.get("contact_person") as string;
+    const note = formData.get("note") as string;
+
+    if (oib && !isValidOIB(oib)) {
+      redirect(`/brands/${brand.id}/edit?error=oib`);
+    }
+
+    // 2️⃣ UPDATE CLIENT
+    await sb
+      .from("clients")
+      .update({
+        name: client_name,
+        oib: oib || null,
+        address,
+        phone,
+        email
+      })
+      .eq("id", client.id);
+
+    // 3️⃣ UPDATE BRAND
+    await sb
+      .from("brands")
+      .update({
+        name: brand_name,
+        email,
+        contact_person,
+        note: note || null
+      })
+      .eq("id", brand.id);
+
+    redirect(`/brands/${brand.id}?success=updated`);
+  }
+
+  return (
+    <AppShell title="Editiraj brend i klijenta" role={u.role}>
+      <div className="mx-auto max-w-xl rounded-2xl border border-zinc-800 bg-zinc-900/40 p-5">
+        <h2 className="mb-4 text-lg font-semibold">
+          Uređivanje klijenta i brenda
+        </h2>
+
+        <form action={updateClientAndBrand} className="space-y-4 text-sm">
+          <input
+            name="client_name"
+            defaultValue={client.name}
+            required
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="brand_name"
+            defaultValue={brand.name}
+            required
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="oib"
+            defaultValue={client.oib ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="address"
+            defaultValue={client.address ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            type="email"
+            name="email"
+            defaultValue={brand.email ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="phone"
+            defaultValue={client.phone ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <input
+            name="contact_person"
+            defaultValue={brand.contact_person ?? ""}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <textarea
+            name="note"
+            defaultValue={brand.note ?? ""}
+            rows={3}
+            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
+          />
+
+          <button className="w-full rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600">
+            Spremi promjene
+          </button>
+        </form>
+      </div>
+    </AppShell>
+  );
+}
