@@ -29,9 +29,14 @@ export function SubscriptionsTable({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [q, setQ] = useState(searchParams?.get("q") ?? "");
-  const [status, setStatus] = useState<"" | BrandStatus>("");
+  const initialStatus: "" | BrandStatus =
+    searchParams?.get("package") ? "AKTIVAN" : "";
 
+  const [q, setQ] = useState(searchParams?.get("q") ?? "");
+  const [status, setStatus] =
+    useState<"" | BrandStatus>(initialStatus);
+
+  // 🔒 čuvamo SVE postojeće parametre, mijenjamo samo `q`
   useEffect(() => {
     const params = new URLSearchParams(
       searchParams ? Array.from(searchParams.entries()) : []
