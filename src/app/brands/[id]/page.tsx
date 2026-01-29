@@ -258,36 +258,40 @@ export default async function BrandPage({
               key={s.id}
               className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-4 text-xs sm:text-sm"
             >
-              <div className="mb-1 font-medium">
-                {packageName ?? "—"}
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <div className="mb-1 font-medium">
+                    {packageName ?? "—"}
+                  </div>
+
+                  <div className="text-zinc-400">
+                    {formatDate(s.start_date)} – {formatDate(s.end_date)}
+                  </div>
+
+                  <div className="mt-1">{deriveStatus(s)}</div>
+
+                  {canRenew && (
+                    <Link
+                      href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
+                      className="mt-3 inline-block text-xs text-green-400 hover:underline"
+                    >
+                      Produži
+                    </Link>
+                  )}
+                </div>
+
+                {isAdmin && (
+                  <form action={deleteSubscription}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <button
+                      type="submit"
+                      className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
+                    >
+                      🗑 Obriši
+                    </button>
+                  </form>
+                )}
               </div>
-
-              <div className="text-zinc-400">
-                {formatDate(s.start_date)} – {formatDate(s.end_date)}
-              </div>
-
-              <div className="mt-1">{deriveStatus(s)}</div>
-
-              {canRenew && (
-                <Link
-                  href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
-                  className="mt-3 inline-block text-xs text-green-400 hover:underline"
-                >
-                  Produži
-                </Link>
-              )}
-
-              {isAdmin && (
-                <form action={deleteSubscription} className="mt-3">
-                  <input type="hidden" name="id" value={s.id} />
-                  <button
-                    type="submit"
-                    className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
-                  >
-                    🗑 Obriši
-                  </button>
-                </form>
-              )}
             </div>
           );
         })}
@@ -320,36 +324,40 @@ export default async function BrandPage({
                   key={s.id}
                   className="rounded-2xl border border-zinc-800 bg-zinc-900/30 p-4 text-xs sm:text-sm opacity-60"
                 >
-                  <div className="mb-1 font-medium">
-                    {packageName ?? "—"}
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <div className="mb-1 font-medium">
+                        {packageName ?? "—"}
+                      </div>
+
+                      <div className="text-zinc-400">
+                        {formatDate(s.start_date)} – {formatDate(s.end_date)}
+                      </div>
+
+                      <div className="mt-1">Neaktivna</div>
+
+                      {canRenew && (
+                        <Link
+                          href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
+                          className="mt-3 inline-block text-xs text-green-400 hover:underline"
+                        >
+                          Produži
+                        </Link>
+                      )}
+                    </div>
+
+                    {isAdmin && (
+                      <form action={deleteSubscription}>
+                        <input type="hidden" name="id" value={s.id} />
+                        <button
+                          type="submit"
+                          className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
+                        >
+                          🗑 Obriši
+                        </button>
+                      </form>
+                    )}
                   </div>
-
-                  <div className="text-zinc-400">
-                    {formatDate(s.start_date)} – {formatDate(s.end_date)}
-                  </div>
-
-                  <div className="mt-1">Neaktivna</div>
-
-                  {canRenew && (
-                    <Link
-                      href={`/subscriptions/new?brand=${id}&renew=${s.id}`}
-                      className="mt-3 inline-block text-xs text-green-400 hover:underline"
-                    >
-                      Produži
-                    </Link>
-                  )}
-
-                  {isAdmin && (
-                    <form action={deleteSubscription} className="mt-3">
-                      <input type="hidden" name="id" value={s.id} />
-                      <button
-                        type="submit"
-                        className="inline-flex items-center gap-1 rounded-lg border border-red-600/40 bg-red-600/10 px-2 py-1 text-xs text-red-400 hover:bg-red-600/20 hover:text-red-300 transition"
-                      >
-                        🗑 Obriši
-                      </button>
-                    </form>
-                  )}
                 </div>
               );
             })}
