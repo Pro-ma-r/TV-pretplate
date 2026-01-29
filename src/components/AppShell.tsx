@@ -19,8 +19,11 @@ export function AppShell({
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <header className="sticky top-0 z-20 border-b border-zinc-800 bg-zinc-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
-          {/* LEFT: LOGO + TITLE */}
-          <div className="flex items-center gap-3">
+          {/* LEFT: LOGO + TITLE (KLIKABILNO) */}
+          <Link
+            href="/dashboard"
+            className="flex items-center gap-3 hover:opacity-90 transition"
+          >
             <img
               src="https://lbusgwzwobefmobdvlde.supabase.co/storage/v1/object/public/misc/logo.png"
               alt="Tvornica vjenčanja"
@@ -35,7 +38,7 @@ export function AppShell({
                 {title}
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* RIGHT: DESKTOP NAV */}
           <nav className="hidden items-center gap-4 text-sm sm:flex">
@@ -60,7 +63,6 @@ export function AppShell({
               Izvještaji
             </Link>
 
-            {/* ADMIN: NOVI KLIJENT */}
             {isAdmin && (
               <Link
                 href="/clients/new"
@@ -121,7 +123,6 @@ export function AppShell({
                 Izvještaji
               </Link>
 
-              {/* ADMIN: NOVI KLIJENT (MOBILE) */}
               {isAdmin && (
                 <Link
                   href="/clients/new"
