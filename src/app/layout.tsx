@@ -14,12 +14,14 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  const pathname = (await headers()).get("x-pathname");
+  // Next.js 15: headers() je async
+  const requestHeaders = await headers();
+  const pathname = requestHeaders.get("x-pathname") || "";
 
-  // JAVNE RUTE – bez auth checka
+  // JAVNE RUTE – ovdje NE radimo auth check
   if (
-    pathname?.startsWith("/login") ||
-    pathname?.startsWith("/logout") ||
+    pathname.startsWith("/login") ||
+    pathname.startsWith("/logout") ||
     pathname === "/"
   ) {
     return (
@@ -42,4 +44,10 @@ export default async function RootLayout({
   }
 
   return (
-    <htm
+    <html lang="hr">
+      <body className="min-h-screen bg-zinc-950 text-zinc-100">
+        {children}
+      </body>
+    </html>
+  );
+}
