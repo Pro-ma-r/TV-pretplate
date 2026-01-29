@@ -5,6 +5,7 @@ import { AppShell } from "@/src/components/AppShell";
 import { requireUser } from "@/src/lib/auth";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
+import Link from "next/link";
 
 function isValidOIB(oib: string) {
   if (!/^\d{11}$/.test(oib)) return false;
@@ -30,8 +31,6 @@ export default async function EditBrandPage({
 
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
-
-  // ⬅️ JEDINA ZAŠTITA: mora biti ulogiran
   if (!u) redirect("/login");
 
   const { data } = await supabase
@@ -59,9 +58,7 @@ export default async function EditBrandPage({
   if (!data) {
     return (
       <AppShell title="Greška" role={u.role}>
-        <div className="text-sm text-red-400">
-          Brend ne postoji.
-        </div>
+        <div className="text-sm text-red-400">Brend ne postoji.</div>
       </AppShell>
     );
   }
@@ -87,7 +84,6 @@ export default async function EditBrandPage({
       redirect(`/brands/${id}/edit?error=oib`);
     }
 
-    // UPDATE CLIENT (ako postoji)
     if (client) {
       await sb
         .from("clients")
@@ -101,7 +97,6 @@ export default async function EditBrandPage({
         .eq("id", client.id);
     }
 
-    // UPDATE BRAND
     await sb
       .from("brands")
       .update({
@@ -112,7 +107,6 @@ export default async function EditBrandPage({
       })
       .eq("id", brand.id);
 
-    // ⬅️ JEDINI REDIRECT
     redirect(`/brands/${id}`);
   }
 
@@ -182,9 +176,22 @@ export default async function EditBrandPage({
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
-          <button className="w-full rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600">
-            Spremi promjene
-          </button>
+          {/* GUMBI */}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="submit"
+              className="flex-1 rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600"
+            >
+              Spremi promjene
+            </button>
+
+            <Link
+              href={`/brands/${id}`}
+              className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 py-2 text-center font-medium text-zinc-300 hover:bg-zinc-800"
+            >
+              Odustani
+            </Link>
+          </div>
         </form>
       </div>
     </AppShell>
