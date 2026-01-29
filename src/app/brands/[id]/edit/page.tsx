@@ -32,8 +32,7 @@ export default async function EditBrandPage({
   const u = await requireUser(supabase);
   if (!u || u.role !== "admin") redirect("/dashboard");
 
-  // 🔹 Dohvat brenda + klijenta
-  const { data, error } = await supabase
+  const { data } = await supabase
     .from("brands")
     .select(
       `
@@ -55,7 +54,7 @@ export default async function EditBrandPage({
     .eq("id", id)
     .single();
 
-  if (error || !data) redirect("/dashboard");
+  if (!data) redirect("/dashboard");
 
   const brand = data;
   const client = data.clients;
@@ -78,28 +77,20 @@ export default async function EditBrandPage({
       redirect(`/brand/${id}/edit?error=oib`);
     }
 
-    // 🔹 UPDATE CLIENT
-    await sb
-      .from("clients")
-      .update({
-        name: client_name,
-        oib: oib || null,
-        address,
-        phone,
-        email
-      })
-      .eq("id", client.id);
+    await sb.from("clients").update({
+      name: client_name,
+      oib: oib || null,
+      address,
+      phone,
+      email
+    }).eq("id", client.id);
 
-    // 🔹 UPDATE BRAND
-    await sb
-      .from("brands")
-      .update({
-        name: brand_name,
-        email,
-        contact_person,
-        note: note || null
-      })
-      .eq("id", brand.id);
+    await sb.from("brands").update({
+      name: brand_name,
+      email,
+      contact_person,
+      note: note || null
+    }).eq("id", brand.id);
 
     redirect(`/brand/${id}?success=updated`);
   }
@@ -112,64 +103,20 @@ export default async function EditBrandPage({
         </h2>
 
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
-          <input
-            name="client_name"
-            defaultValue={client?.name ?? ""}
-            required
-            placeholder="Klijent"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
+          <input name="client_name" defaultValue={client?.name ?? ""} required className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="brand_name" defaultValue={brand.name} required className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="oib" defaultValue={client?.oib ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="address" defaultValue={client?.address ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input type="email" name="email" defaultValue={brand.email ?? client?.email ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="phone" defaultValue={client?.phone ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <input name="contact_person" defaultValue={brand.contact_person ?? ""} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
+          <textarea name="note" defaultValue={brand.note ?? ""} rows={3} className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2" />
 
-          <input
-            name="brand_name"
-            defaultValue={brand.name}
-            required
-            placeholder="Brend"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <input
-            name="oib"
-            defaultValue={client?.oib ?? ""}
-            placeholder="OIB"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <input
-            name="address"
-            defaultValue={client?.address ?? ""}
-            placeholder="Adresa"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <input
-            type="email"
-            name="email"
-            defaultValue={brand.email ?? client?.email ?? ""}
-            placeholder="Email"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <input
-            name="phone"
-            defaultValue={client?.phone ?? ""}
-            placeholder="Telefon"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <input
-            name="contact_person"
-            defaultValue={brand.contact_person ?? ""}
-            placeholder="Kontakt osoba"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <textarea
-            name="note"
-            defaultValue={brand.note ?? ""}
-            rows={3}
-            placeholder="Napomena"
-            className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
-          />
-
-          <but
+          <button className="w-full rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600">
+            Spremi promjene
+          </button>
+        </form>
+      </div>
+    </AppShell>
+  );
+}
