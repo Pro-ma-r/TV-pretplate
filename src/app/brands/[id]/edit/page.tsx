@@ -30,7 +30,9 @@ export default async function EditBrandPage({
 
   const supabase = await supabaseServer();
   const u = await requireUser(supabase);
-  if (!u || u.role !== "admin") redirect("/dashboard");
+
+  // ⬅️ JEDINA ZAŠTITA: mora biti ulogiran
+  if (!u) redirect("/login");
 
   const { data } = await supabase
     .from("brands")
@@ -54,11 +56,18 @@ export default async function EditBrandPage({
     .eq("id", id)
     .single();
 
-  if (!data) redirect("/dashboard");
+  if (!data) {
+    return (
+      <AppShell title="Greška" role={u.role}>
+        <div className="text-sm text-red-400">
+          Brend ne postoji.
+        </div>
+      </AppShell>
+    );
+  }
 
   const brand = data;
-  const client = data.clients?.[0];
-  if (!client) redirect("/dashboard");
+  const client = data.clients?.[0] ?? null;
 
   async function updateClientAndBrand(formData: FormData) {
     "use server";
@@ -78,17 +87,19 @@ export default async function EditBrandPage({
       redirect(`/brands/${id}/edit?error=oib`);
     }
 
-    // UPDATE CLIENT
-    await sb
-      .from("clients")
-      .update({
-        name: client_name,
-        oib: oib || null,
-        address,
-        phone,
-        email
-      })
-      .eq("id", client.id);
+    // UPDATE CLIENT (ako postoji)
+    if (client) {
+      await sb
+        .from("clients")
+        .update({
+          name: client_name,
+          oib: oib || null,
+          address,
+          phone,
+          email
+        })
+        .eq("id", client.id);
+    }
 
     // UPDATE BRAND
     await sb
@@ -101,7 +112,8 @@ export default async function EditBrandPage({
       })
       .eq("id", brand.id);
 
-    redirect(`/brands/${id}?success=updated`);
+    // ⬅️ JEDINI REDIRECT
+    redirect(`/brands/${id}`);
   }
 
   return (
@@ -114,46 +126,51 @@ export default async function EditBrandPage({
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
           <input
             name="client_name"
-            defaultValue={client.name ?? ""}
-            required
+            defaultValue={client?.name ?? ""}
+            placeholder="Klijent"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="brand_name"
             defaultValue={brand.name}
-            required
+            placeholder="Brend"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="oib"
-            defaultValue={client.oib ?? ""}
+            defaultValue={client?.oib ?? ""}
+            placeholder="OIB"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="address"
-            defaultValue={client.address ?? ""}
+            defaultValue={client?.address ?? ""}
+            placeholder="Adresa"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             type="email"
             name="email"
-            defaultValue={brand.email ?? client.email ?? ""}
+            defaultValue={brand.email ?? client?.email ?? ""}
+            placeholder="Email"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="phone"
-            defaultValue={client.phone ?? ""}
+            defaultValue={client?.phone ?? ""}
+            placeholder="Telefon"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="contact_person"
             defaultValue={brand.contact_person ?? ""}
+            placeholder="Kontakt osoba"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
@@ -161,6 +178,7 @@ export default async function EditBrandPage({
             name="note"
             defaultValue={brand.note ?? ""}
             rows={3}
+            placeholder="Napomena"
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
