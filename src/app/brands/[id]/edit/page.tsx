@@ -67,8 +67,7 @@ export default async function EditBrandPage({
 
   const brand = data;
 
-  // ✅ JEDINI FIX: radi i ako Supabase vrati clients kao OBJECT ili kao ARRAY,
-  // i TypeScript više neće tretirati client kao array pa neće pucati na client.id
+  // ✅ JEDINI FIX: radi i ako Supabase vrati clients kao OBJECT ili kao ARRAY
   const client = (
     Array.isArray((data as any).clients)
       ? (data as any).clients[0]
@@ -187,19 +186,19 @@ export default async function EditBrandPage({
 
           {/* GUMBI */}
           <div className="flex gap-3 pt-2">
-            <button
-              type="submit"
-              className="flex-1 rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600"
-            >
-              Spremi promjene
-            </button>
-
             <Link
               href={`/brands/${id}`}
               className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 py-2 text-center font-medium text-zinc-300 hover:bg-zinc-800"
             >
               Odustani
             </Link>
+
+            <button
+              type="submit"
+              className="flex-1 rounded-lg bg-purple-600/80 py-2 font-medium text-white hover:bg-purple-600"
+            >
+              Spremi promjene
+            </button>
           </div>
         </form>
       </div>
