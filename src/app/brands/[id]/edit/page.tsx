@@ -29,15 +29,13 @@ export default async function EditBrandPage({
 }) {
   const { id } = await params;
 
-  // 🔐 auth provjera – ostaje kako je bila
-  const supabaseAuth = await supabaseServer();
-  const u = await requireUser(supabaseAuth);
+  // 🔐 auth provjera (obični client)
+  const supabase = await supabaseServer();
+  const u = await requireUser(supabase);
   if (!u || u.role !== "admin") redirect("/dashboard");
 
-  // ✅ ADMIN CLIENT ZA SELECT (ZAOBILAZI RLS)
-  const supabase = supabaseAdmin;
-
-  const { data } = await supabase
+  // ✅ SELECT preko admina (da sigurno povuče podatke)
+  const { data } = await supabaseAdmin
     .from("brands")
     .select(
       `
@@ -182,6 +180,7 @@ export default async function EditBrandPage({
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
+          {/* GUMBI */}
           <div className="flex gap-3 pt-2">
             <button
               type="submit"
