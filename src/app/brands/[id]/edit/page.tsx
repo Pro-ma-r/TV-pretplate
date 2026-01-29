@@ -57,7 +57,9 @@ export default async function EditBrandPage({
   if (!data) redirect("/dashboard");
 
   const brand = data;
-  const client = data.clients;
+  const client = data.clients?.[0]; // ✅ OVO JE BITNO
+
+  if (!client) redirect("/dashboard");
 
   async function updateClientAndBrand(formData: FormData) {
     "use server";
@@ -77,6 +79,7 @@ export default async function EditBrandPage({
       redirect(`/brand/${id}/edit?error=oib`);
     }
 
+    // ✅ UPDATE CLIENT
     await sb
       .from("clients")
       .update({
@@ -88,6 +91,7 @@ export default async function EditBrandPage({
       })
       .eq("id", client.id);
 
+    // ✅ UPDATE BRAND
     await sb
       .from("brands")
       .update({
@@ -111,7 +115,7 @@ export default async function EditBrandPage({
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
           <input
             name="client_name"
-            defaultValue={client?.name ?? ""}
+            defaultValue={client.name ?? ""}
             required
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
@@ -125,26 +129,26 @@ export default async function EditBrandPage({
 
           <input
             name="oib"
-            defaultValue={client?.oib ?? ""}
+            defaultValue={client.oib ?? ""}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="address"
-            defaultValue={client?.address ?? ""}
+            defaultValue={client.address ?? ""}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             type="email"
             name="email"
-            defaultValue={brand.email ?? client?.email ?? ""}
+            defaultValue={brand.email ?? client.email ?? ""}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
           <input
             name="phone"
-            defaultValue={client?.phone ?? ""}
+            defaultValue={client.phone ?? ""}
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
 
