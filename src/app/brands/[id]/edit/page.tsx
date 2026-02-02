@@ -23,11 +23,15 @@ function isValidOIB(oib: string) {
 }
 
 export default async function EditBrandPage({
-  params
+  params,
+  searchParams
 }: {
   params: Promise<{ id: string }>;
+  searchParams?: Promise<{ error?: string }>;
 }) {
   const { id } = await params;
+  const sp = await searchParams;
+  const error = sp?.error;
 
   // 🔐 auth provjera (obični client)
   const supabase = await supabaseServer();
@@ -67,7 +71,7 @@ export default async function EditBrandPage({
 
   const brand = data;
 
-  // ✅ JEDINI FIX: radi i ako Supabase vrati clients kao OBJECT ili kao ARRAY
+  // ✅ radi i ako Supabase vrati clients kao OBJECT ili ARRAY
   const client = (
     Array.isArray((data as any).clients)
       ? (data as any).clients[0]
@@ -124,6 +128,12 @@ export default async function EditBrandPage({
         <h2 className="mb-4 text-lg font-semibold">
           Uređivanje klijenta i brenda
         </h2>
+
+        {error === "oib" && (
+          <div className="mb-4 rounded-lg border border-red-600/40 bg-red-600/20 px-3 py-2 text-sm text-red-400">
+            Neispravan OIB. Provjeri da ima 11 znamenki i ispravnu kontrolnu znamenku.
+          </div>
+        )}
 
         <form action={updateClientAndBrand} className="space-y-4 text-sm">
           <input
