@@ -48,26 +48,54 @@ export default async function ReportsPage({
     `
     );
 
+  // -----------------------------
+  // 1️⃣ Grupiranje po brand + tipu paketa
+  // -----------------------------
+  const latestMap = new Map<string, any>();
+
+  data?.forEach((s: any) => {
+    const isContent =
+      s.packages?.name?.toLowerCase().includes("pristup sadržaju") ?? false;
+
+    const type = isContent ? "CONTENT" : "OTHER";
+
+    const key = `${s.brands.id}_${type}`;
+
+    const existing = latestMap.get(key);
+
+    if (!existing) {
+      latestMap.set(key, s);
+      return;
+    }
+
+    const existingEnd = new Date(existing.end_date);
+    const currentEnd = new Date(s.end_date);
+
+    if (currentEnd > existingEnd) {
+      latestMap.set(key, s);
+    }
+  });
+
+  const latestSubscriptions = Array.from(latestMap.values());
+
+  // -----------------------------
+  // 2️⃣ Tek sada radimo filtriranje
+  // -----------------------------
   const rows =
-    data
-      ?.filter((s: any) => {
+    latestSubscriptions
+      .filter((s: any) => {
         const end = new Date(s.end_date);
 
         const isContent =
-          s.packages?.name
-            ?.toLowerCase()
-            .includes("pristup sadržaju") ?? false;
+          s.packages?.name?.toLowerCase().includes("pristup sadržaju") ?? false;
 
-        // filter po paketu
         if (paket === "CONTENT" && !isContent) return false;
         if (paket === "OTHER" && isContent) return false;
 
-        // filter po isteku
         if (istek === "PAST") {
           return end >= pastFrom && end < today;
         }
 
-        // FUTURE
         return end >= today && end <= futureTo;
       })
       .map((s: any) => ({
