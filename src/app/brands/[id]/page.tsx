@@ -230,13 +230,21 @@ export default async function BrandPage({
 
         <div className="mt-5">
           <div className="mb-1 text-xs sm:text-sm text-zinc-500">Napomena</div>
-          <form action={updateBrandNote}>
+
+          {/* ✅ PROMJENA: dodan submit gumb da forma stvarno pozove server action */}
+          <form action={updateBrandNote} className="space-y-2">
             <textarea
               name="value"
               defaultValue={brand.note ?? ""}
               rows={4}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs sm:text-sm"
             />
+            <button
+              type="submit"
+              className="rounded-lg bg-purple-600/80 px-4 py-1.5 text-xs sm:text-sm font-medium text-white hover:bg-purple-600"
+            >
+              Spremi napomenu
+            </button>
           </form>
         </div>
       </div>
@@ -251,7 +259,9 @@ export default async function BrandPage({
         {activeSubs.map((s) => {
           const packageName = packageMap[s.package_id];
           const canRenew =
-            isAdmin && canRenewPackage(packageName) && !s.manually_disabled;
+            isAdmin &&
+            canRenewPackage(packageName) &&
+            !s.manually_disabled;
 
           return (
             <div
@@ -260,7 +270,9 @@ export default async function BrandPage({
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="mb-1 font-medium">{packageName ?? "—"}</div>
+                  <div className="mb-1 font-medium">
+                    {packageName ?? "—"}
+                  </div>
 
                   <div className="text-zinc-400">
                     {formatDate(s.start_date)} – {formatDate(s.end_date)}
@@ -305,13 +317,17 @@ export default async function BrandPage({
       {/* ISTEKLO */}
       {expiredSubs.length > 0 && (
         <div className="mt-10">
-          <h3 className="mb-3 text-sm font-semibold text-zinc-500">Isteklo</h3>
+          <h3 className="mb-3 text-sm font-semibold text-zinc-500">
+            Isteklo
+          </h3>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {expiredSubs.map((s) => {
               const packageName = packageMap[s.package_id];
               const canRenew =
-                isAdmin && canRenewPackage(packageName) && !s.manually_disabled;
+                isAdmin &&
+                canRenewPackage(packageName) &&
+                !s.manually_disabled;
 
               return (
                 <div
