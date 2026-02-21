@@ -56,6 +56,13 @@ export default async function NewSubscriptionPage({
     const start_date = fd.get("start_date") as string;
     const end_date = fd.get("end_date") as string;
 
+    // ✅ NOVO: payment_date dolazi samo za "Pristup sadržaju*"
+    const payment_date_raw = fd.get("payment_date");
+    const payment_date =
+      typeof payment_date_raw === "string" && payment_date_raw.length > 0
+        ? payment_date_raw
+        : null;
+
     if (!package_id || !start_date || !end_date) {
       throw new Error("Missing form data");
     }
@@ -65,6 +72,7 @@ export default async function NewSubscriptionPage({
       package_id,
       start_date,
       end_date,
+      payment_date,
       manually_disabled: false
     });
 
