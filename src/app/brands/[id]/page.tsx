@@ -91,6 +91,7 @@ export default async function BrandPage({
       id,
       start_date,
       end_date,
+      payment_date,
       manually_disabled,
       note,
       package_id
@@ -264,6 +265,9 @@ export default async function BrandPage({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {activeSubs.map((s) => {
           const packageName = packageMap[s.package_id];
+          const isPristupSadrzaju =
+            (packageName ?? "").toLowerCase().includes("pristup sadržaju");
+
           const canRenew =
             isAdmin &&
             canRenewPackage(packageName) &&
@@ -283,6 +287,12 @@ export default async function BrandPage({
                   <div className="text-zinc-400">
                     {formatDate(s.start_date)} – {formatDate(s.end_date)}
                   </div>
+
+                  {isPristupSadrzaju && (
+                    <div className="mt-1 text-zinc-400">
+                      Uplata: {formatDate((s as any).payment_date)}
+                    </div>
+                  )}
 
                   <div className="mt-1">{deriveStatus(s)}</div>
 
@@ -330,6 +340,9 @@ export default async function BrandPage({
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {expiredSubs.map((s) => {
               const packageName = packageMap[s.package_id];
+              const isPristupSadrzaju =
+                (packageName ?? "").toLowerCase().includes("pristup sadržaju");
+
               const canRenew =
                 isAdmin &&
                 canRenewPackage(packageName) &&
@@ -349,6 +362,12 @@ export default async function BrandPage({
                       <div className="text-zinc-400">
                         {formatDate(s.start_date)} – {formatDate(s.end_date)}
                       </div>
+
+                      {isPristupSadrzaju && (
+                        <div className="mt-1 text-zinc-400">
+                          Uplata: {formatDate((s as any).payment_date)}
+                        </div>
+                      )}
 
                       <div className="mt-1">Neaktivna</div>
 
