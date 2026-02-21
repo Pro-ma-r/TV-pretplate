@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
 import { supabaseServer } from "@/src/lib/supabaseServer";
 import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { requireUser } from "@/src/lib/auth";
@@ -116,6 +117,9 @@ export default async function BrandPage({
       .from("brands")
       .update({ note: value || null })
       .eq("id", id);
+
+    revalidatePath(`/brands/${id}`);
+    redirect(`/brands/${id}`);
   }
 
   async function updateContactPerson(formData: FormData) {
@@ -126,6 +130,9 @@ export default async function BrandPage({
       .from("brands")
       .update({ contact_person: value || null })
       .eq("id", id);
+
+    revalidatePath(`/brands/${id}`);
+    redirect(`/brands/${id}`);
   }
 
   async function disableBrand() {
@@ -231,7 +238,6 @@ export default async function BrandPage({
         <div className="mt-5">
           <div className="mb-1 text-xs sm:text-sm text-zinc-500">Napomena</div>
 
-          {/* ✅ PROMJENA: dodan submit gumb da forma stvarno pozove server action */}
           <form action={updateBrandNote} className="space-y-2">
             <textarea
               name="value"
