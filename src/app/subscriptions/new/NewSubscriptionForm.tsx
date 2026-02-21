@@ -30,9 +30,7 @@ export default function NewSubscriptionForm({
 }) {
   const today = toInputDate(new Date());
 
-  const [packageId, setPackageId] = useState(
-    renewData?.package_id ?? ""
-  );
+  const [packageId, setPackageId] = useState(renewData?.package_id ?? "");
   const [startDate, setStartDate] = useState(today);
   const [endDate, setEndDate] = useState("");
 
@@ -40,6 +38,11 @@ export default function NewSubscriptionForm({
     () => packages.find((p) => p.id === packageId),
     [packages, packageId]
   );
+
+  const isPristupSadrzaju = useMemo(() => {
+    const n = (selectedPackage?.name ?? "").toLowerCase();
+    return n.includes("pristup sadržaju");
+  }, [selectedPackage]);
 
   // PRODUŽENJE → OD = dan nakon isteka
   useEffect(() => {
@@ -52,10 +55,7 @@ export default function NewSubscriptionForm({
   // AUTO DO (reagira na promjenu OD ili paketa)
   useEffect(() => {
     if (startDate && selectedPackage?.duration_days) {
-      const end = addDays(
-        new Date(startDate),
-        selectedPackage.duration_days
-      );
+      const end = addDays(new Date(startDate), selectedPackage.duration_days);
       setEndDate(toInputDate(end));
     }
   }, [startDate, selectedPackage]);
@@ -108,6 +108,11 @@ export default function NewSubscriptionForm({
             className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2"
           />
         </div>
+
+        {/* ✅ NOVO: datum uplate (današnji), samo za "Pristup sadržaju*" */}
+        {isPristupSadrzaju && (
+          <input type="hidden" name="payment_date" value={today} />
+        )}
 
         <button
           type="submit"
