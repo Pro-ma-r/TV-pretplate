@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/src/lib/supabaseServer";
+import { supabaseAdmin } from "@/src/lib/supabaseAdmin";
 import { requireUser } from "@/src/lib/auth";
 import { AppShell } from "@/src/components/AppShell";
 import Link from "next/link";
@@ -110,15 +111,18 @@ export default async function BrandPage({
   async function updateBrandNote(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
-    const sb = await supabaseServer();
-    await sb.from("brands").update({ note: value || null }).eq("id", id);
+
+    await supabaseAdmin
+      .from("brands")
+      .update({ note: value || null })
+      .eq("id", id);
   }
 
   async function updateContactPerson(formData: FormData) {
     "use server";
     const value = formData.get("value") as string | null;
-    const sb = await supabaseServer();
-    await sb
+
+    await supabaseAdmin
       .from("brands")
       .update({ contact_person: value || null })
       .eq("id", id);
@@ -225,9 +229,7 @@ export default async function BrandPage({
         </div>
 
         <div className="mt-5">
-          <div className="mb-1 text-xs sm:text-sm text-zinc-500">
-            Napomena
-          </div>
+          <div className="mb-1 text-xs sm:text-sm text-zinc-500">Napomena</div>
           <form action={updateBrandNote}>
             <textarea
               name="value"
@@ -249,9 +251,7 @@ export default async function BrandPage({
         {activeSubs.map((s) => {
           const packageName = packageMap[s.package_id];
           const canRenew =
-            isAdmin &&
-            canRenewPackage(packageName) &&
-            !s.manually_disabled;
+            isAdmin && canRenewPackage(packageName) && !s.manually_disabled;
 
           return (
             <div
@@ -260,9 +260,7 @@ export default async function BrandPage({
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <div className="mb-1 font-medium">
-                    {packageName ?? "—"}
-                  </div>
+                  <div className="mb-1 font-medium">{packageName ?? "—"}</div>
 
                   <div className="text-zinc-400">
                     {formatDate(s.start_date)} – {formatDate(s.end_date)}
@@ -307,17 +305,13 @@ export default async function BrandPage({
       {/* ISTEKLO */}
       {expiredSubs.length > 0 && (
         <div className="mt-10">
-          <h3 className="mb-3 text-sm font-semibold text-zinc-500">
-            Isteklo
-          </h3>
+          <h3 className="mb-3 text-sm font-semibold text-zinc-500">Isteklo</h3>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {expiredSubs.map((s) => {
               const packageName = packageMap[s.package_id];
               const canRenew =
-                isAdmin &&
-                canRenewPackage(packageName) &&
-                !s.manually_disabled;
+                isAdmin && canRenewPackage(packageName) && !s.manually_disabled;
 
               return (
                 <div
