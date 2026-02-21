@@ -39,11 +39,6 @@ export default function NewSubscriptionForm({
     [packages, packageId]
   );
 
-  const isPristupSadrzaju = useMemo(() => {
-    const n = (selectedPackage?.name ?? "").toLowerCase();
-    return n.includes("pristup sadržaju");
-  }, [selectedPackage]);
-
   // PRODUŽENJE → OD = dan nakon isteka
   useEffect(() => {
     if (renewData?.end_date) {
@@ -109,10 +104,8 @@ export default function NewSubscriptionForm({
           />
         </div>
 
-        {/* ✅ NOVO: datum uplate (današnji), samo za "Pristup sadržaju*" */}
-        {isPristupSadrzaju && (
-          <input type="hidden" name="payment_date" value={today} />
-        )}
+        {/* ✅ NOVO: uvijek šaljemo datum uplate = danas */}
+        <input type="hidden" name="payment_date" value={today} />
 
         <button
           type="submit"
